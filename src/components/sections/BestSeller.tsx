@@ -2,6 +2,7 @@
 
 import React from "react";
 import Image from "next/image";
+import Link from "next/link";
 import { ArrowRight, ChevronRight } from "lucide-react";
 import { useInView } from "@/hooks/useInView";
 
@@ -85,7 +86,7 @@ const BestSeller: React.FC = () => {
           </div>
           <div className="lg:col-span-4 lg:text-right">
             <a
-              href="#kontak"
+              href="/paket"
               className="group inline-flex items-center gap-2 rounded-full bg-white px-6 py-3.5 text-sm font-medium text-[#8B1A1A] transition hover:bg-[#FFD7A8]"
               style={{ fontFamily: "Inter Tight, sans-serif" }}
             >
@@ -207,8 +208,8 @@ const BestSeller: React.FC = () => {
                   ))}
                 </ul>
 
-                <a
-                  href="#kontak"
+                <Link
+                  href="/paket"
                   className={[
                     "mt-6 flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition",
                     p.featured
@@ -219,7 +220,7 @@ const BestSeller: React.FC = () => {
                 >
                   Pesan Sekarang
                   <ArrowRight className="h-4 w-4" />
-                </a>
+                </Link>
               </div>
             </div>
           ))}
