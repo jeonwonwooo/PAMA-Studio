@@ -20,6 +20,7 @@ import {
   Music2,
   ChevronLeft,
   ChevronRight,
+  ExternalLink,
 } from "lucide-react";
 
 /* ----------------------------------------------------------------------------
@@ -64,33 +65,38 @@ const Navbar: React.FC = () => {
           ].join(" ")}
         >
           {/* Logo */}
-          <a href="#beranda" className="flex items-center gap-2 pl-1">
-            <div className="relative">
-              <div className="absolute inset-0 rounded-full bg-[#8B1A1A]/20 blur-md" />
-              <div className="relative flex h-10 w-10 items-center justify-center rounded-full bg-gradient-to-br from-[#8B1A1A] to-[#5C0E0E] text-white shadow-lg">
-                <span
-                  className="text-[15px] font-bold tracking-tight"
-                  style={{ fontFamily: "Fraunces, serif" }}
-                >
-                  P
-                </span>
-              </div>
-            </div>
-            <div className="leading-none">
-              <div
-                className="text-[17px] font-semibold text-[#2a0a0a]"
-                style={{ fontFamily: "Fraunces, serif" }}
-              >
-                PAMA
-              </div>
-              <div
-                className="text-[10px] uppercase tracking-[0.22em] text-[#8B1A1A]/80"
-                style={{ fontFamily: "Inter Tight, sans-serif" }}
-              >
-                Studio
-              </div>
-            </div>
-          </a>
+<a href="#beranda" className="flex items-center gap-2 pl-1">
+  <div className="relative h-11 w-11 flex-shrink-0">
+    {/* Glow halus */}
+    <div className="absolute inset-0 rounded-full bg-[#8B1A1A]/10 blur-sm" />
+    {/* Border tipis */}
+    <div className="absolute inset-0 rounded-full border border-[#8B1A1A]/25 z-10" />
+    {/* Logo bundar */}
+    <div className="relative h-full w-full overflow-hidden rounded-full bg-[#fdf6f0]">
+      <Image
+        src="/logo.png"
+        alt="Logo PAMA"
+        fill
+        className="object-contain p-1"
+      />
+    </div>
+  </div>
+
+  <div className="leading-none">
+    <div
+      className="text-[17px] font-semibold text-[#2a0a0a]"
+      style={{ fontFamily: "Fraunces, serif" }}
+    >
+      PAMA
+    </div>
+    <div
+      className="text-[10px] uppercase tracking-[0.22em] text-[#8B1A1A]/80"
+      style={{ fontFamily: "Inter Tight, sans-serif" }}
+    >
+      Studio
+    </div>
+  </div>
+</a>
 
           {/* Desktop links */}
           <nav
@@ -185,7 +191,7 @@ const Hero: React.FC = () => {
         }}
       />
 
-      <div className="relative mx-auto max-w-7xl px-5 lg:px-8">
+            <div className="relative mx-auto max-w-7xl px-5 lg:px-8">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
           {/* Text */}
           <div className="lg:col-span-7 lg:pt-6">
@@ -244,44 +250,6 @@ const Hero: React.FC = () => {
                 Lihat Portofolio
                 <ArrowUpRight className="h-4 w-4 transition-transform group-hover:-translate-y-0.5 group-hover:translate-x-0.5" />
               </a>
-            </div>
-
-            {/* Mini stats row */}
-            <div
-              className="mt-10 flex flex-wrap items-center gap-x-8 gap-y-4"
-              style={{ fontFamily: "Inter Tight, sans-serif" }}
-            >
-              <div className="flex -space-x-3">
-                {[
-                  "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=80&h=80&fit=crop",
-                  "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=80&h=80&fit=crop",
-                  "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=80&h=80&fit=crop",
-                  "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=80&h=80&fit=crop",
-                ].map((src, i) => (
-                  <Image
-                    key={i}
-                    src={src}
-                    alt="client"
-                    width={36}
-                    height={36}
-                    unoptimized
-                    className="h-9 w-9 rounded-full border-2 border-[#FBF7F1] object-cover"
-                  />
-                ))}
-              </div>
-              <div>
-                <div className="flex items-center gap-1 text-[#8B1A1A]">
-                  {[...Array(5)].map((_, i) => (
-                    <Star key={i} className="h-3.5 w-3.5 fill-current" />
-                  ))}
-                  <span className="ml-1 text-xs font-semibold text-[#1a0505]">
-                    4.9/5
-                  </span>
-                </div>
-                <div className="text-xs text-[#3a1a1a]/60">
-                  500+ klien puas
-                </div>
-              </div>
             </div>
           </div>
 
@@ -371,7 +339,7 @@ const WhyChoose: React.FC = () => {
           <div className="lg:col-span-5">
             <div className="relative aspect-[4/3] overflow-hidden rounded-[28px] shadow-[0_30px_80px_-30px_rgba(90,15,15,0.4)]">
               <Image
-                src="https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=900&h=700&fit=crop"
+                src="/images/foto-pama.jpg"
                 alt="PAMA team"
                 fill
                 unoptimized
@@ -509,24 +477,20 @@ const Stats: React.FC = () => {
 /* ============================ PORTFOLIO ================================= */
 const Portfolio: React.FC = () => {
   const row1 = [
-    "https://images.unsplash.com/photo-1524504388940-b1c1722653e1?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1531746020798-e6953c6e8e04?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1517841905240-472988babdf9?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1522075469751-3a6694fb2f61?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1534528741775-53994a69daeb?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1488426862026-3ee34a7d66df?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1502823403499-6ccfcf4fb453?w=600&h=750&fit=crop",
+    "/images/foto4.jpg",
+    "/images/foto1.jpg",
+    "/images/foto2.jpg",
+    "/images/foto3.jpg",
+    "/images/foto5.jpg",
+    "/images/foto6.jpg",
   ];
   const row2 = [
-    "https://images.unsplash.com/photo-1524250502761-1ac6f2e30d43?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1554151228-14d9def656e4?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1509967419530-da38b4704bc6?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1564564321837-a57b7070ac4f?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1506277886164-e25aa3f4ef7f?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1521572163474-6864f9cf17ab?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1517365830460-955ce3ccd263?w=600&h=750&fit=crop",
-    "https://images.unsplash.com/photo-1530785602389-07594beb8b73?w=600&h=750&fit=crop",
+    "/images/foto7.jpg",
+    "/images/foto8.jpg",
+    "/images/foto9.jpg",
+    "/images/foto10.jpg",
+    "/images/foto11.jpg",
+    "/images/foto12.jpg",
   ];
 
   return (
@@ -814,8 +778,11 @@ const BestSeller: React.FC = () => {
   );
 };
 
-/* ========================== TESTIMONIALS ================================ */
 const Testimonials: React.FC = () => {
+  // Ganti ID ini dengan Place ID PAMA Studio dari Google Maps
+  const GOOGLE_PLACE_ID = "ChIJtxOArCHh1y0RBRJE2se0bjU";
+  const GOOGLE_REVIEW_URL = `https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`;
+
   const testimonials = [
     {
       name: "Nadia Pramesti",
@@ -853,7 +820,7 @@ const Testimonials: React.FC = () => {
     <section className="relative bg-[#FBF7F1] py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
-          {/* Left */}
+          {/* Left Side */}
           <div className="lg:col-span-4">
             <span
               className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8B1A1A]"
@@ -876,8 +843,28 @@ const Testimonials: React.FC = () => {
               kami.
             </p>
 
-            {/* Featured avatar */}
-            <div className="mt-8 flex items-center gap-4">
+            {/* Google Review CTA Button */}
+            <div className="mt-8">
+              <a
+                href={GOOGLE_REVIEW_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="inline-flex items-center gap-2 rounded-full bg-[#8B1A1A] px-6 py-3 text-sm font-medium text-white transition-all hover:bg-[#6B1212] hover:shadow-lg active:scale-95"
+                style={{ fontFamily: "Inter Tight, sans-serif" }}
+              >
+                <Star className="h-4 w-4 fill-current text-[#FFD7A8]" />
+                Tulis Ulasan di Google
+                <ExternalLink className="h-3 w-3 opacity-70" />
+              </a>
+              <p className="mt-3 text-[11px] text-[#3a1a1a]/40 italic">
+                *Ulasan Anda akan langsung tampil di Google Maps kami
+              </p>
+            </div>
+
+            <hr className="my-8 border-[#8B1A1A]/10" />
+
+            {/* Featured avatar section */}
+            <div className="flex items-center gap-4">
               <div className="relative">
                 <div className="absolute inset-0 rounded-full bg-[#8B1A1A]/20 blur-md" />
                 <Image
@@ -935,7 +922,7 @@ const Testimonials: React.FC = () => {
             </div>
           </div>
 
-          {/* Right - cards */}
+          {/* Right Side - Cards */}
           <div className="lg:col-span-8">
             <div className="space-y-3">
               {testimonials.map((t, i) => (
@@ -1068,7 +1055,7 @@ const Contact: React.FC = () => {
             <div className="mt-8 overflow-hidden rounded-[28px] border border-[#8B1A1A]/10 shadow-[0_20px_60px_-20px_rgba(90,15,15,0.3)]">
               <iframe
                 title="PAMA Studio Location"
-                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d15826.977093891453!2d112.7378!3d-7.2574!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7fbf8381e6b07%3A0x1!2sSurabaya%2C%20East%20Java!5e0!3m2!1sen!2sid!4v1700000000000"
+                src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3956.13539456903!2d112.6882384750016!3d-7.450269492560941!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x2dd7e121ac8013b7%3A0x356eb4c7da441205!2sPama%20Studio!5e0!3m2!1sid!2sid!4v1776313990758!5m2!1sid!2sid"
                 width="100%"
                 height="360"
                 style={{ border: 0 }}
@@ -1096,27 +1083,37 @@ const Contact: React.FC = () => {
                 {
                   icon: <MapPin className="h-4 w-4" />,
                   label: "Alamat Studio",
-                  value: "Jl. Raya Sidoarjo No. 123, Jawa Timur",
+                  value: "Pama Studio (self photo studio) berlokasi di Jl. Benda, Banjarbendo, Kec. Sidoarjo, Kabupaten Sidoarjo, Jawa Timur. ",
+                  link: "https://maps.app.goo.gl/7a3H1UGnxbmnFJmR7"
                 },
                 {
                   icon: <Mail className="h-4 w-4" />,
                   label: "Email",
-                  value: "cs@pamastudio.com",
+                  value: "pamastudio.id@gmail.com",
+                  link: "mailto:pamastudio.id@gmail.com"
                 },
                 {
                   icon: <Phone className="h-4 w-4" />,
                   label: "WhatsApp",
-                  value: "+62 812-3333-4455",
+                  value: "+62 823-3155-5431",
+                  link: "https://wa.me/6282331555431"
                 },
                 {
                   icon: <Music2 className="h-4 w-4" />,
                   label: "TikTok",
-                  value: "@pama.studio",
+                  value: "@Pama_studio",
+                  link: "https://www.tiktok.com/@pama_studio"
+                },
+                             {
+                  icon: <Camera className="h-4 w-4" />,
+                  label: "Instagram",
+                  value: "@pamastudio.id",
+                  link: "https://www.instagram.com/pamastudio.id/"
                 },
               ].map((c, i) => (
                 <a
                   key={i}
-                  href="#"
+                  href={c.link}
                   className="group flex items-center justify-between rounded-2xl bg-gradient-to-br from-[#8B1A1A] to-[#6B1212] p-4 text-white shadow-[0_10px_30px_-15px_rgba(139,26,26,0.6)] transition hover:-translate-y-0.5 hover:shadow-[0_14px_36px_-15px_rgba(139,26,26,0.8)]"
                 >
                   <div className="flex items-center gap-3">
@@ -1136,7 +1133,7 @@ const Contact: React.FC = () => {
             </div>
 
             <a
-              href="https://maps.google.com"
+              href="https://maps.app.goo.gl/7a3H1UGnxbmnFJmR7"
               target="_blank"
               rel="noreferrer"
               className="mt-6 inline-flex items-center gap-2 rounded-full bg-[#1a0505] px-6 py-3.5 text-sm font-medium text-white transition hover:bg-[#8B1A1A]"
@@ -1152,187 +1149,147 @@ const Contact: React.FC = () => {
   );
 };
 
-/* ============================ FOOTER ==================================== */
 const Footer: React.FC = () => {
   return (
     <footer className="relative overflow-hidden bg-gradient-to-br from-[#5C0E0E] via-[#4a0a0a] to-[#2a0505] text-white">
-      {/* Decorative */}
+      {/* Decorative dot grid */}
       <div
-        className="absolute inset-0 opacity-[0.05]"
+        className="absolute inset-0 opacity-[0.04]"
         style={{
           backgroundImage:
             "radial-gradient(circle at 1px 1px, white 1px, transparent 0)",
           backgroundSize: "32px 32px",
         }}
       />
-      <div className="pointer-events-none absolute -top-20 left-1/2 h-64 w-64 -translate-x-1/2 rounded-full bg-[#8B1A1A]/30 blur-[100px]" />
+      {/* Glow atas */}
+      <div className="pointer-events-none absolute -top-24 left-1/2 h-72 w-72 -translate-x-1/2 rounded-full bg-[#8B1A1A]/40 blur-[120px]" />
 
-      <div className="relative mx-auto max-w-7xl px-5 py-16 lg:px-8">
-        <div className="grid grid-cols-2 gap-8 md:grid-cols-4 lg:gap-12">
-          {/* Brand */}
-          <div className="col-span-2">
+      <div className="relative mx-auto max-w-7xl px-6 py-16 lg:px-10">
+        <div className="grid grid-cols-1 gap-10 sm:grid-cols-2 lg:grid-cols-4 lg:gap-12">
+
+                    {/* ── Brand ── */}
+          <div className="sm:col-span-2 lg:col-span-1">
+            {/* Logo + nama */}
             <div className="flex items-center gap-3">
-              <div className="flex h-12 w-12 items-center justify-center rounded-full bg-white text-[#8B1A1A] shadow-lg">
-                <span
-                  className="text-xl font-bold"
-                  style={{ fontFamily: "Fraunces, serif" }}
-                >
-                  P
-                </span>
+              <div className="relative h-12 w-12 flex-shrink-0">
+                <div className="absolute inset-0 rounded-full bg-white/10 blur-sm" />
+                <div className="relative h-full w-full overflow-hidden rounded-full border border-white/20 bg-[#fdf6f0]">
+                  <Image
+                    src="/logo.png"
+                    alt="Logo PAMA Studio"
+                    fill
+                    className="object-contain p-1"
+                  />
+                </div>
               </div>
               <div>
                 <div
-                  className="text-xl font-semibold"
+                  className="text-lg font-semibold text-white"
                   style={{ fontFamily: "Fraunces, serif" }}
                 >
                   PAMA Studio
                 </div>
                 <div
-                  className="text-[11px] uppercase tracking-[0.22em] text-white/60"
+                  className="text-[10px] uppercase tracking-[0.22em] text-white/50"
                   style={{ fontFamily: "Inter Tight, sans-serif" }}
                 >
                   Self Photo Studio
                 </div>
               </div>
             </div>
+
+            {/* Deskripsi */}
             <p
-              className="mt-5 max-w-xs text-sm leading-relaxed text-white/60"
+              className="mt-5 text-sm leading-relaxed text-white/55"
               style={{ fontFamily: "Inter Tight, sans-serif" }}
             >
-              Mengabadikan hubungan, kualitas, dan higienitas dalam satu studio
-              self-photo yang nyaman — spesial untukmu.
+              Dengan melakukan booking di Pama Studio, Anda menyetujui Kebijakan
+              Privasi kami. Foto tidak akan dipublikasikan tanpa persetujuan
+              customer. Pembatalan maksimal 3 jam sebelum jadwal.
             </p>
-
-            {/* Socials */}
-            <div className="mt-6 flex items-center gap-2">
-              {[
-                { icon: <Camera className="h-4 w-4" />, label: "Instagram" }, // Sementara pakai Camera
-                { icon: <Music2 className="h-4 w-4" />, label: "TikTok" },
-                { icon: <Mail className="h-4 w-4" />, label: "Email" },
-              ].map((s, i) => (
-                <a
-                  key={i}
-                  href="#"
-                  aria-label={s.label}
-                  className="flex h-10 w-10 items-center justify-center rounded-full border border-white/15 text-white/80 transition hover:border-white hover:bg-white hover:text-[#8B1A1A]"
-                >
-                  {s.icon}
-                </a>
-              ))}
-            </div>
           </div>
 
-          {/* Info */}
+          {/* ── Info ── */}
           <div style={{ fontFamily: "Inter Tight, sans-serif" }}>
             <div
-              className="text-sm font-semibold uppercase tracking-[0.2em] text-white"
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-white/90"
               style={{ fontFamily: "Fraunces, serif" }}
             >
               Info
             </div>
-            <ul className="mt-4 space-y-3 text-sm text-white/60">
-              <li>
-                <a href="#" className="transition hover:text-white">
-                  FAQ & Bantuan
-                </a>
-              </li>
-              <li>
-                <a href="#" className="transition hover:text-white">
-                  Syarat & Ketentuan
-                </a>
-              </li>
-              <li>
-                <a href="#" className="transition hover:text-white">
-                  Kebijakan Privasi
-                </a>
-              </li>
-              <li>
-                <a href="#" className="transition hover:text-white">
-                  Metode Pembayaran
-                </a>
-              </li>
+            <div className="mt-1 mb-4 h-px w-8 bg-[#FFD7A8]/40" />
+            <ul className="space-y-3 text-sm text-white/55">
+              {["FAQ & Bantuan", "Syarat & Ketentuan", "Kebijakan Privasi", "Metode Pembayaran"].map((item) => (
+                <li key={item}>
+                  <a href="#" className="transition-colors duration-150 hover:text-white">
+                    {item}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Pages */}
+          {/* ── Pages ── */}
           <div style={{ fontFamily: "Inter Tight, sans-serif" }}>
             <div
-              className="text-sm font-semibold uppercase tracking-[0.2em] text-white"
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-white/90"
               style={{ fontFamily: "Fraunces, serif" }}
             >
               Pages
             </div>
-            <ul className="mt-4 space-y-3 text-sm text-white/60">
-              <li>
-                <a href="#beranda" className="transition hover:text-white">
-                  Tentang Kami
-                </a>
-              </li>
-              <li>
-                <a href="#portofolio" className="transition hover:text-white">
-                  Portofolio
-                </a>
-              </li>
-              <li>
-                <a href="#paket" className="transition hover:text-white">
-                  Paket & Harga
-                </a>
-              </li>
-              <li>
-                <a href="#kontak" className="transition hover:text-white">
-                  Kontak
-                </a>
-              </li>
+            <div className="mt-1 mb-4 h-px w-8 bg-[#FFD7A8]/40" />
+            <ul className="space-y-3 text-sm text-white/55">
+              {[
+                { label: "Tentang Kami", href: "#beranda" },
+                { label: "Portofolio", href: "#portofolio" },
+                { label: "Paket & Harga", href: "#paket" },
+                { label: "Kontak", href: "#kontak" },
+              ].map((item) => (
+                <li key={item.label}>
+                  <a href={item.href} className="transition-colors duration-150 hover:text-white">
+                    {item.label}
+                  </a>
+                </li>
+              ))}
             </ul>
           </div>
 
-          {/* Contact */}
-          <div
-            className="col-span-2 md:col-span-4 lg:col-span-1"
-            style={{ fontFamily: "Inter Tight, sans-serif" }}
-          >
+          {/* ── Contact ── */}
+          <div style={{ fontFamily: "Inter Tight, sans-serif" }}>
             <div
-              className="text-sm font-semibold uppercase tracking-[0.2em] text-white"
+              className="text-xs font-semibold uppercase tracking-[0.2em] text-white/90"
               style={{ fontFamily: "Fraunces, serif" }}
             >
-              Contact
+              Kontak
             </div>
-            <ul className="mt-4 space-y-3 text-sm text-white/60">
-              <li className="flex items-start gap-2">
-                <MapPin className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#FFD7A8]" />
-                Sidoarjo, Jawa Timur
+            <div className="mt-1 mb-4 h-px w-8 bg-[#FFD7A8]/40" />
+            <ul className="space-y-4 text-sm text-white/55">
+              <li className="flex items-start gap-2.5">
+                <MapPin className="mt-0.5 h-4 w-4 shrink-0 text-[#FFD7A8]" />
+                <span>Sidoarjo, Jawa Timur</span>
               </li>
-              <li className="flex items-start gap-2">
-                <Mail className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#FFD7A8]" />
-                cs@pamastudio.com
+              <li className="flex items-start gap-2.5">
+                <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#FFD7A8]" />
+                <a href="mailto:cs@pamastudio.com" className="transition-colors hover:text-white">
+                  cs@pamastudio.com
+                </a>
               </li>
-              <li className="flex items-start gap-2">
-                <Phone className="mt-0.5 h-3.5 w-3.5 shrink-0 text-[#FFD7A8]" />
-                +62 812-3333-4455
+              <li className="flex items-start gap-2.5">
+                <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#FFD7A8]" />
+                <a href="tel:+6281233334455" className="transition-colors hover:text-white">
+                  +62 812-3333-4455
+                </a>
               </li>
             </ul>
           </div>
         </div>
 
-        {/* Bottom bar */}
+                {/* ── Bottom bar ── */}
         <div
-          className="mt-14 flex flex-col items-center justify-between gap-4 border-t border-white/10 pt-6 text-xs text-white/50 sm:flex-row"
+          className="mt-14 flex flex-col items-center justify-center gap-3 border-t border-white/10 pt-6 text-xs text-white/40 sm:flex-row"
           style={{ fontFamily: "Inter Tight, sans-serif" }}
         >
-          <div>© 2026 PAMA Studio. All rights reserved.</div>
-          <div className="flex items-center gap-4">
-            <a href="#" className="transition hover:text-white">
-              Privacy
-            </a>
-            <span>·</span>
-            <a href="#" className="transition hover:text-white">
-              Terms
-            </a>
-            <span>·</span>
-            <a href="#" className="transition hover:text-white">
-              Sitemap
-            </a>
-          </div>
+          <div className="text-sm">© Februari 2023 PAMA Studio. All rights reserved.</div>
         </div>
       </div>
     </footer>
