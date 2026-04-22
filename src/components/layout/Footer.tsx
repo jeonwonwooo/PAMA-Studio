@@ -151,14 +151,14 @@ const Footer: React.FC = () => {
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Mail className="mt-0.5 h-4 w-4 shrink-0 text-[#FFD7A8]" />
-                  <a href="mailto:cs@pamastudio.com" className="transition-colors hover:text-white">
-                    cs@pamastudio.com
+                  <a href="mailto:pamastudio.id@gmail.com" className="transition-colors hover:text-white">
+                    pamastudio.id@gmail.com
                   </a>
                 </li>
                 <li className="flex items-start gap-2.5">
                   <Phone className="mt-0.5 h-4 w-4 shrink-0 text-[#FFD7A8]" />
-                  <a href="tel:+6281233334455" className="transition-colors hover:text-white">
-                    +62 812-3333-4455
+                  <a href="tel:+6282331555431" className="transition-colors hover:text-white">
+                    +62 823-3155-5431
                   </a>
                 </li>
               </ul>
