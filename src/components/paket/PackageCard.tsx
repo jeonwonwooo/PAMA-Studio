@@ -18,7 +18,7 @@ export interface PackageData {
 }
 
 const PackageCard: React.FC<{ data: PackageData; index: number }> = ({ data, index }) => {
-  const [accordionOpen, setAccordionOpen] = useState(true); // Default open di Desktop
+  const [accordionOpen, setAccordionOpen] = useState(false); // Default open di Desktop
   const [galleryOpen, setGalleryOpen] = useState(false);
   const { ref, inView } = useInView({ threshold: 0.08 });
 
@@ -100,7 +100,7 @@ const PackageCard: React.FC<{ data: PackageData; index: number }> = ({ data, ind
               {/* Kolom Kiri: Sub Paket */}
               {data.subPackages.length > 0 && (
                 <div className="flex flex-col">
-                  <button onClick={() => setAccordionOpen(!accordionOpen)} className="flex w-full items-center justify-between pb-4 border-b border-[#8B1A1A]/10">
+                  <button onClick={() => setAccordionOpen(!accordionOpen)} className="flex h-[52px] w-full items-center justify-between border-b border-[#8B1A1A]/10">
                     <span className="text-lg font-semibold text-[#1a0505]" style={{ fontFamily: "Fraunces, serif" }}>Pilihan Paket</span>
                     <div className="flex h-7 w-7 items-center justify-center rounded-full border border-[#8B1A1A]/20 text-[#8B1A1A] transition hover:bg-[#8B1A1A]/5">
                       {accordionOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -127,21 +127,26 @@ const PackageCard: React.FC<{ data: PackageData; index: number }> = ({ data, ind
 
               {/* Kolom Kanan: Additional & CTA */}
               <div className="flex flex-col justify-between h-full space-y-6">
-                {data.additionals && data.additionals.length > 0 && (
-                  <div>
-                    <h4 className="mb-3 text-xs font-semibold uppercase tracking-[0.15em] text-[#8B1A1A] border-b border-[#8B1A1A]/10 pb-3" style={{ fontFamily: "Inter Tight, sans-serif" }}>
-                      Layanan Additional
-                    </h4>
-                    <div className="space-y-2">
-                      {data.additionals.map((add, ai) => (
-                        <div key={ai} className="flex items-center justify-between rounded-xl bg-[#8B1A1A]/5 px-3.5 py-2.5 transition hover:bg-[#8B1A1A]/10">
-                          <span className="text-[13px] font-medium text-[#1a0505]" style={{ fontFamily: "Inter Tight, sans-serif" }}>{add.name}</span>
-                          <span className="text-[13px] font-bold text-[#8B1A1A]" style={{ fontFamily: "Fraunces, serif" }}>{add.price}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                )}
+  {data.additionals && data.additionals.length > 0 && (
+    <div>
+      <h4 className="flex h-[52px] items-center text-xs font-semibold uppercase tracking-[0.15em] text-[#8B1A1A] border-b border-[#8B1A1A]/10">
+        Layanan Additional
+      </h4>
+      <div
+        className="overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
+        style={{ maxHeight: accordionOpen ? "1000px" : "0px", opacity: accordionOpen ? 1 : 0 }}
+      >
+        <div className="mt-4 space-y-2">
+          {data.additionals.map((add, ai) => (
+            <div key={ai} className="flex items-center justify-between rounded-xl bg-[#8B1A1A]/5 px-3.5 py-2.5 transition hover:bg-[#8B1A1A]/10">
+              <span className="text-[13px] font-medium text-[#1a0505]" style={{ fontFamily: "Inter Tight, sans-serif" }}>{add.name}</span>
+              <span className="text-[13px] font-bold text-[#8B1A1A]" style={{ fontFamily: "Fraunces, serif" }}>{add.price}</span>
+            </div>
+          ))}
+        </div>
+      </div>
+    </div>
+  )}
 
                 {/* Tombol CTA selalu berada di ujung bawah kanan */}
                 <div className="mt-auto pt-4">

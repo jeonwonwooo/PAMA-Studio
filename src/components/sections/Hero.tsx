@@ -89,7 +89,7 @@ const Hero: React.FC = () => {
           <div className="relative lg:col-span-5">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[28px] shadow-[0_30px_80px_-30px_rgba(90,15,15,0.5)]">
               <Image
-                src="https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=800&h=1000&fit=crop"
+                src="/images/hero.jpg"
                 alt="PAMA Studio hero"
                 fill
                 unoptimized
