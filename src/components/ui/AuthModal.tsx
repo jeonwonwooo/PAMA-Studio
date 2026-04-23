@@ -1,98 +1,121 @@
 "use client";
 
-import React, { useState, useEffect, useMemo } from "react";
-import { X, Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
+import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
+import { X, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/browse";
 import { useRouter } from "next/navigation";
 
-interface AuthModalProps {
-  isOpen: boolean;
-  onClose: () => void;
-}
+type Mode = "login" | "register";
 
-type AuthMode = "login" | "register";
-
-const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+export default function AuthModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
   const router = useRouter();
   const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
-  const [mode, setMode] = useState<AuthMode>("login");
+  const [mode, setMode] = useState<Mode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
 
-  const [form, setForm] = useState({
-    name: "",
-    email: "",
-    password: "",
-  });
-
+  const [form, setForm] = useState({ name: "", email: "", password: "" });
   const [error, setError] = useState("");
-  const [success, setSuccess] = useState("");
 
-  // Lock scroll
   useEffect(() => {
-    document.body.style.overflow = isOpen ? "hidden" : "";
-    return () => { document.body.style.overflow = ""; };
+    if (!isOpen) {
+      setError("");
+      setLoading(false);
+      return;
+    }
+    document.body.style.overflow = "hidden";
+    return () => {
+      document.body.style.overflow = "";
+    };
   }, [isOpen]);
 
-  // ESC close
-  useEffect(() => {
-    const handler = (e: KeyboardEvent) => e.key === "Escape" && onClose();
-    if (isOpen) window.addEventListener("keydown", handler);
-    return () => window.removeEventListener("keydown", handler);
-  }, [isOpen, onClose]);
+  // 🔹 Helper
+  const getCleanEmail = () => form.email.trim().toLowerCase();
 
   const validate = () => {
-    if (mode === "register" && !form.name) return "Nama wajib diisi";
-    if (!form.email) return "Email wajib diisi";
-    if (!form.password) return "Password wajib diisi";
-    if (form.password.length < 6) return "Minimal 6 karakter";
+    if (!form.email || !form.password) return "Email dan password wajib diisi.";
+    if (mode === "register" && !form.name.trim()) return "Nama wajib diisi.";
+    if (form.password.length < 6) return "Password minimal 6 karakter.";
     return "";
   };
 
+  // 🔥 HANDLE REGISTER
+  const handleRegister = async () => {
+    const email = getCleanEmail();
+
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: form.password,
+    });
+
+    if (error) {
+      // handle duplicate email (fix dari kasus kamu)
+      if (error.message.includes("duplicate")) {
+        throw new Error("Email sudah terdaftar. Silakan login.");
+      }
+      throw error;
+    }
+
+    if (data.user) {
+      await supabase.from("profiles").insert({
+        id: data.user.id,
+        full_name: form.name.trim(),
+        email,
+        role: "client",
+      });
+    }
+
+    setMode("login");
+    throw new Error("Registrasi berhasil! Silakan login.");
+  };
+
+  // 🔥 HANDLE LOGIN
+  const handleLogin = async () => {
+    const email = getCleanEmail();
+
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: form.password,
+    });
+
+    if (error) {
+      if (error.message.includes("Invalid login credentials")) {
+        throw new Error("Email atau password salah.");
+      }
+      throw error;
+    }
+
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("role")
+      .eq("id", data.user.id)
+      .single();
+
+    const role = profile?.role || "client";
+
+    onClose();
+    router.push(role === "admin" ? "/admin" : "/paket");
+    router.refresh();
+  };
+
+  // 🔥 MAIN SUBMIT
   const handleSubmit = async () => {
     setError("");
-    setSuccess("");
 
-    const err = validate();
-    if (err) return setError(err);
+    const validation = validate();
+    if (validation) return setError(validation);
 
     setLoading(true);
-
     try {
       if (mode === "register") {
-        const { error } = await supabase.auth.signUp({
-          email: form.email,
-          password: form.password,
-          options: {
-            data: { full_name: form.name },
-          },
-        });
-
-        if (error) return setError(error.message);
-
-        setSuccess("Registrasi berhasil! Silakan login.");
-        setMode("login");
-        setForm({ name: "", email: "", password: "" });
-
+        await handleRegister();
       } else {
-        const { error } = await supabase.auth.signInWithPassword({
-          email: form.email,
-          password: form.password,
-        });
-
-        if (error) return setError(error.message);
-
-        setSuccess("Login berhasil!");
-
-        setTimeout(() => {
-          onClose();
-          router.push("/paket"); // 🔥 redirect utama
-        }, 500);
+        await handleLogin();
       }
-    } catch {
-      setError("Gagal koneksi ke server");
+    } catch (err: any) {
+      setError(err.message || "Terjadi kesalahan.");
     } finally {
       setLoading(false);
     }
@@ -102,110 +125,91 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-      {/* Backdrop */}
-      <div
-        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
-        onClick={onClose}
-      />
+      <div onClick={onClose} className="absolute inset-0 bg-black/40 backdrop-blur-sm" />
 
-      {/* Modal */}
-      <div className="relative w-full max-w-md">
-        <div className="overflow-hidden rounded-[28px] bg-white shadow-2xl">
+      <div className="relative w-full max-w-3xl overflow-hidden rounded-[32px] border border-white/30 bg-white/90 shadow-2xl backdrop-blur-xl flex flex-col lg:flex-row">
+        <div className="relative hidden lg:block lg:w-[40%]">
+          <Image src="/images/foto6.jpg" alt="PAMA" fill className="object-cover" />
+          <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60" />
+        </div>
 
-          {/* Header */}
-          <div className="p-6">
-            <button
-              onClick={onClose}
-              className="absolute right-4 top-4"
-            >
-              <X />
-            </button>
+        <div className="relative flex-1 p-8">
+          <button onClick={onClose} className="absolute right-6 top-6 text-[#8B1A1A]">
+            <X className="h-5 w-5" />
+          </button>
 
-            <div className="flex items-center gap-2">
-              <Image src="/logo.png" alt="logo" width={40} height={40} />
-              <h2 className="font-semibold text-lg">PAMA Studio</h2>
-            </div>
+          <h2 className="text-2xl font-bold mb-6 text-[#1a0505]">
+            {mode === "login" ? "Masuk" : "Daftar Akun"}
+          </h2>
 
-            <h3 className="mt-4 text-xl font-semibold">
-              {mode === "login" ? "Login" : "Register"}
-            </h3>
+          <div className="mb-6 flex rounded-xl bg-gray-100 p-1">
+            {(["login", "register"] as Mode[]).map((m) => (
+              <button
+                key={m}
+                onClick={() => { setMode(m); setError(""); }}
+                className={`flex-1 rounded-lg py-2 text-[10px] font-bold uppercase transition-all ${
+                  mode === m ? "bg-[#8B1A1A] text-white shadow-md" : "text-gray-400"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
 
-            {/* Error */}
-            {error && (
-              <div className="mt-3 text-red-500 text-sm">{error}</div>
-            )}
-
-            {/* Success */}
-            {success && (
-              <div className="mt-3 text-green-600 text-sm">{success}</div>
-            )}
-
-            {/* Form */}
-            <div className="mt-4 space-y-3">
-
-              {mode === "register" && (
+          <div className="space-y-4">
+            {mode === "register" && (
+              <div className="flex items-center gap-3 rounded-xl border p-3 bg-white">
+                <User className="h-4 w-4 text-[#8B1A1A]" />
                 <input
-                  type="text"
-                  placeholder="Nama"
                   value={form.name}
                   onChange={(e) => setForm({ ...form, name: e.target.value })}
-                  className="w-full border p-3 rounded-lg"
+                  className="w-full text-sm outline-none"
+                  placeholder="Nama Lengkap"
                 />
-              )}
+              </div>
+            )}
 
+            <div className="flex items-center gap-3 rounded-xl border p-3 bg-white">
+              <Mail className="h-4 w-4 text-[#8B1A1A]" />
               <input
-                type="email"
-                placeholder="Email"
                 value={form.email}
                 onChange={(e) => setForm({ ...form, email: e.target.value })}
-                className="w-full border p-3 rounded-lg"
+                className="w-full text-sm outline-none"
+                placeholder="Email"
               />
+            </div>
 
-              <div className="relative">
-                <input
-                  type={showPassword ? "text" : "password"}
-                  placeholder="Password"
-                  value={form.password}
-                  onChange={(e) => setForm({ ...form, password: e.target.value })}
-                  className="w-full border p-3 rounded-lg pr-10"
-                />
-                <button
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-3 top-3"
-                >
-                  {showPassword ? <EyeOff /> : <Eye />}
-                </button>
-              </div>
-
-              <button
-                onClick={handleSubmit}
-                disabled={loading}
-                className="w-full bg-[#8B1A1A] text-white py-3 rounded-lg flex items-center justify-center gap-2"
-              >
-                {loading ? <Loader2 className="animate-spin" /> : null}
-                {mode === "login" ? "Login" : "Register"}
-                <ArrowRight />
+            <div className="flex items-center gap-3 rounded-xl border p-3 bg-white">
+              <Lock className="h-4 w-4 text-[#8B1A1A]" />
+              <input
+                type={showPassword ? "text" : "password"}
+                value={form.password}
+                onChange={(e) => setForm({ ...form, password: e.target.value })}
+                className="w-full text-sm outline-none"
+                placeholder="Password"
+              />
+              <button onClick={() => setShowPassword(!showPassword)}>
+                {showPassword ? <EyeOff className="h-4 w-4 text-gray-400" /> : <Eye className="h-4 w-4 text-gray-400" />}
               </button>
-
-              <button
-                onClick={() => {
-                  setMode(mode === "login" ? "register" : "login");
-                  setError("");
-                  setSuccess("");
-                }}
-                className="text-sm text-center w-full text-[#8B1A1A]"
-              >
-                {mode === "login"
-                  ? "Belum punya akun? Register"
-                  : "Sudah punya akun? Login"}
-              </button>
-
             </div>
           </div>
+
+          {error && (
+            <p className="mt-4 text-[10px] text-red-600 font-bold text-center leading-tight">
+              {error}
+            </p>
+          )}
+
+          <button
+            onClick={handleSubmit}
+            disabled={loading}
+            className="w-full mt-8 bg-[#8B1A1A] text-white py-4 rounded-xl font-bold flex justify-center items-center gap-2 hover:bg-[#6B1212] transition-all disabled:opacity-50"
+          >
+            {loading && <Loader2 className="h-4 w-4 animate-spin" />}
+            {mode === "login" ? "MASUK" : "DAFTAR"}
+          </button>
         </div>
       </div>
     </div>
   );
-};
-
-export default AuthModal;
+}

@@ -12,7 +12,7 @@ import {
 } from "lucide-react";
 
 import { createSupabaseBrowserClient } from "@/lib/supabase/browse";
-import CheckoutAuthModal from "@/components/ui/CheckoutAuthModal";
+import CheckoutAuthModal from "@/components/ui/AuthModal";
 import SuccessModal from "@/components/ui/SuccessModal";
 
 // --- Types ---
