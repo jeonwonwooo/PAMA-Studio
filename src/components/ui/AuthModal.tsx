@@ -1,8 +1,10 @@
 "use client";
 
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect, useMemo } from "react";
 import { X, Mail, Lock, User, Eye, EyeOff, ArrowRight, Loader2 } from "lucide-react";
 import Image from "next/image";
+import { createSupabaseBrowserClient } from "@/lib/supabase/browse";
+import { useRouter } from "next/navigation";
 
 interface AuthModalProps {
   isOpen: boolean;
@@ -12,84 +14,88 @@ interface AuthModalProps {
 type AuthMode = "login" | "register";
 
 const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
+  const router = useRouter();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+
   const [mode, setMode] = useState<AuthMode>("login");
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({ name: "", email: "", password: "" });
-  const [errors, setErrors] = useState<Record<string, string>>({});
+
+  const [form, setForm] = useState({
+    name: "",
+    email: "",
+    password: "",
+  });
+
+  const [error, setError] = useState("");
   const [success, setSuccess] = useState("");
 
-  // Lock body scroll
+  // Lock scroll
   useEffect(() => {
-    if (isOpen) {
-      document.body.style.overflow = "hidden";
-    } else {
-      document.body.style.overflow = "";
-    }
+    document.body.style.overflow = isOpen ? "hidden" : "";
     return () => { document.body.style.overflow = ""; };
   }, [isOpen]);
 
-  // ESC to close
+  // ESC close
   useEffect(() => {
-    const onKey = (e: KeyboardEvent) => { if (e.key === "Escape") onClose(); };
-    window.addEventListener("keydown", onKey);
-    return () => window.removeEventListener("keydown", onKey);
-  }, [onClose]);
+    const handler = (e: KeyboardEvent) => e.key === "Escape" && onClose();
+    if (isOpen) window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [isOpen, onClose]);
 
-  const validate = useCallback(() => {
-    const errs: Record<string, string> = {};
-    if (mode === "register" && !form.name.trim()) errs.name = "Nama wajib diisi";
-    if (!form.email.trim()) errs.email = "Email wajib diisi";
-    else if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(form.email)) errs.email = "Format email salah";
-    if (!form.password) errs.password = "Password wajib diisi";
-    else if (form.password.length < 6) errs.password = "Minimal 6 karakter";
-    return errs;
-  }, [mode, form]);
+  const validate = () => {
+    if (mode === "register" && !form.name) return "Nama wajib diisi";
+    if (!form.email) return "Email wajib diisi";
+    if (!form.password) return "Password wajib diisi";
+    if (form.password.length < 6) return "Minimal 6 karakter";
+    return "";
+  };
 
   const handleSubmit = async () => {
-    const errs = validate();
-    setErrors(errs);
-    if (Object.keys(errs).length > 0) return;
-
-    setLoading(true);
+    setError("");
     setSuccess("");
 
+    const err = validate();
+    if (err) return setError(err);
+
+    setLoading(true);
+
     try {
-      const endpoint = mode === "login" ? "/api/auth/login" : "/api/auth/register";
-      const body = mode === "login"
-        ? { email: form.email, password: form.password }
-        : { name: form.name, email: form.email, password: form.password };
+      if (mode === "register") {
+        const { error } = await supabase.auth.signUp({
+          email: form.email,
+          password: form.password,
+          options: {
+            data: { full_name: form.name },
+          },
+        });
 
-      const res = await fetch(endpoint, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-      });
+        if (error) return setError(error.message);
 
-      const data = await res.json();
+        setSuccess("Registrasi berhasil! Silakan login.");
+        setMode("login");
+        setForm({ name: "", email: "", password: "" });
 
-      if (!res.ok) {
-        setErrors({ api: data.message || "Terjadi kesalahan" });
       } else {
-        setSuccess(mode === "login" ? "Login berhasil!" : "Registrasi berhasil! Silakan login.");
-        if (mode === "register") {
-          setTimeout(() => { setMode("login"); setSuccess(""); setForm({ name: "", email: "", password: "" }); }, 1500);
-        } else {
-          setTimeout(() => { onClose(); setForm({ name: "", email: "", password: "" }); }, 1000);
-        }
+        const { error } = await supabase.auth.signInWithPassword({
+          email: form.email,
+          password: form.password,
+        });
+
+        if (error) return setError(error.message);
+
+        setSuccess("Login berhasil!");
+
+        setTimeout(() => {
+          onClose();
+          router.push("/paket"); // 🔥 redirect utama
+        }, 500);
       }
     } catch {
-      setErrors({ api: "Tidak dapat terhubung ke server" });
+      setError("Gagal koneksi ke server");
     } finally {
       setLoading(false);
     }
-  };
-
-  const switchMode = () => {
-    setMode((m) => (m === "login" ? "register" : "login"));
-    setErrors({});
-    setSuccess("");
-    setForm({ name: "", email: "", password: "" });
   };
 
   if (!isOpen) return null;
@@ -98,193 +104,106 @@ const AuthModal: React.FC<AuthModalProps> = ({ isOpen, onClose }) => {
     <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
       {/* Backdrop */}
       <div
-        className="absolute inset-0 bg-[#1a0505]/60 backdrop-blur-sm animate-[fadeIn_300ms_ease]"
+        className="absolute inset-0 bg-black/40 backdrop-blur-sm"
         onClick={onClose}
       />
 
       {/* Modal */}
-      <div className="relative w-full max-w-md animate-[modalIn_400ms_cubic-bezier(0.16,1,0.3,1)]">
-        <div className="overflow-hidden rounded-[28px] border border-white/40 bg-white shadow-[0_40px_100px_-30px_rgba(90,15,15,0.5)]">
-          {/* Top accent bar */}
-          <div className="h-1.5 bg-gradient-to-r from-[#8B1A1A] via-[#D4A373] to-[#8B1A1A]" />
+      <div className="relative w-full max-w-md">
+        <div className="overflow-hidden rounded-[28px] bg-white shadow-2xl">
 
-          <div className="p-7 sm:p-8">
-            {/* Close */}
+          {/* Header */}
+          <div className="p-6">
             <button
               onClick={onClose}
-              className="absolute right-5 top-7 flex h-8 w-8 items-center justify-center rounded-full text-[#3a1a1a]/50 transition hover:bg-[#8B1A1A]/10 hover:text-[#8B1A1A]"
+              className="absolute right-4 top-4"
             >
-              <X className="h-4 w-4" />
+              <X />
             </button>
 
-            {/* Logo */}
-            <div className="flex items-center gap-2.5">
-              <div className="relative h-10 w-10 overflow-hidden rounded-full border border-[#8B1A1A]/20 bg-[#fdf6f0]">
-                <Image src="/logo.png" alt="Logo PAMA" fill className="object-contain p-1" />
-              </div>
-              <div>
-                <div className="text-lg font-semibold text-[#2a0a0a]" style={{ fontFamily: "Fraunces, serif" }}>
-                  PAMA Studio
-                </div>
-              </div>
+            <div className="flex items-center gap-2">
+              <Image src="/logo.png" alt="logo" width={40} height={40} />
+              <h2 className="font-semibold text-lg">PAMA Studio</h2>
             </div>
 
-            {/* Heading */}
-            <h2
-              className="mt-5 text-2xl text-[#1a0505] sm:text-3xl"
-              style={{ fontFamily: "Fraunces, serif", fontWeight: 500 }}
-            >
-              {mode === "login" ? "Selamat Datang" : "Buat Akun Baru"}
-            </h2>
-            <p
-              className="mt-1.5 text-sm text-[#3a1a1a]/60"
-              style={{ fontFamily: "Inter Tight, sans-serif" }}
-            >
-              {mode === "login"
-                ? "Masuk untuk memesan sesi foto di PAMA Studio"
-                : "Daftar untuk mulai memesan sesi foto"}
-            </p>
+            <h3 className="mt-4 text-xl font-semibold">
+              {mode === "login" ? "Login" : "Register"}
+            </h3>
 
-            {/* Success message */}
+            {/* Error */}
+            {error && (
+              <div className="mt-3 text-red-500 text-sm">{error}</div>
+            )}
+
+            {/* Success */}
             {success && (
-              <div className="mt-4 rounded-xl bg-green-50 border border-green-200 px-4 py-3 text-sm text-green-700"
-                style={{ fontFamily: "Inter Tight, sans-serif" }}>
-                {success}
-              </div>
+              <div className="mt-3 text-green-600 text-sm">{success}</div>
             )}
 
-            {/* API Error */}
-            {errors.api && (
-              <div className="mt-4 rounded-xl bg-red-50 border border-red-200 px-4 py-3 text-sm text-red-600"
-                style={{ fontFamily: "Inter Tight, sans-serif" }}>
-                {errors.api}
-              </div>
-            )}
+            {/* Form */}
+            <div className="mt-4 space-y-3">
 
-            {/* Form fields */}
-            <div className="mt-6 space-y-4" style={{ fontFamily: "Inter Tight, sans-serif" }}>
-              {/* Name (register only) */}
               {mode === "register" && (
-                <div>
-                  <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[#3a1a1a]/60">
-                    Nama Lengkap
-                  </label>
-                  <div className="relative">
-                    <User className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8B1A1A]/40" />
-                    <input
-                      type="text"
-                      placeholder="John Doe"
-                      value={form.name}
-                      onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))}
-                      className={[
-                        "w-full rounded-xl border bg-[#FBF7F1] py-3 pl-10 pr-4 text-sm text-[#1a0505] outline-none transition",
-                        "placeholder:text-[#3a1a1a]/30 focus:border-[#8B1A1A] focus:ring-2 focus:ring-[#8B1A1A]/10",
-                        errors.name ? "border-red-400" : "border-[#8B1A1A]/15",
-                      ].join(" ")}
-                    />
-                  </div>
-                  {errors.name && <p className="mt-1 text-xs text-red-500">{errors.name}</p>}
-                </div>
+                <input
+                  type="text"
+                  placeholder="Nama"
+                  value={form.name}
+                  onChange={(e) => setForm({ ...form, name: e.target.value })}
+                  className="w-full border p-3 rounded-lg"
+                />
               )}
 
-              {/* Email */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[#3a1a1a]/60">
-                  Email
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8B1A1A]/40" />
-                  <input
-                    type="email"
-                    placeholder="nama@email.com"
-                    value={form.email}
-                    onChange={(e) => setForm((f) => ({ ...f, email: e.target.value }))}
-                    className={[
-                      "w-full rounded-xl border bg-[#FBF7F1] py-3 pl-10 pr-4 text-sm text-[#1a0505] outline-none transition",
-                      "placeholder:text-[#3a1a1a]/30 focus:border-[#8B1A1A] focus:ring-2 focus:ring-[#8B1A1A]/10",
-                      errors.email ? "border-red-400" : "border-[#8B1A1A]/15",
-                    ].join(" ")}
-                  />
-                </div>
-                {errors.email && <p className="mt-1 text-xs text-red-500">{errors.email}</p>}
+              <input
+                type="email"
+                placeholder="Email"
+                value={form.email}
+                onChange={(e) => setForm({ ...form, email: e.target.value })}
+                className="w-full border p-3 rounded-lg"
+              />
+
+              <div className="relative">
+                <input
+                  type={showPassword ? "text" : "password"}
+                  placeholder="Password"
+                  value={form.password}
+                  onChange={(e) => setForm({ ...form, password: e.target.value })}
+                  className="w-full border p-3 rounded-lg pr-10"
+                />
+                <button
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3 top-3"
+                >
+                  {showPassword ? <EyeOff /> : <Eye />}
+                </button>
               </div>
 
-              {/* Password */}
-              <div>
-                <label className="mb-1.5 block text-xs font-medium uppercase tracking-wider text-[#3a1a1a]/60">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-[#8B1A1A]/40" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    placeholder="Minimal 6 karakter"
-                    value={form.password}
-                    onChange={(e) => setForm((f) => ({ ...f, password: e.target.value }))}
-                    className={[
-                      "w-full rounded-xl border bg-[#FBF7F1] py-3 pl-10 pr-11 text-sm text-[#1a0505] outline-none transition",
-                      "placeholder:text-[#3a1a1a]/30 focus:border-[#8B1A1A] focus:ring-2 focus:ring-[#8B1A1A]/10",
-                      errors.password ? "border-red-400" : "border-[#8B1A1A]/15",
-                    ].join(" ")}
-                    onKeyDown={(e) => { if (e.key === "Enter") handleSubmit(); }}
-                  />
-                  <button
-                    type="button"
-                    onClick={() => setShowPassword((v) => !v)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-[#3a1a1a]/40 hover:text-[#8B1A1A]"
-                  >
-                    {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                  </button>
-                </div>
-                {errors.password && <p className="mt-1 text-xs text-red-500">{errors.password}</p>}
-              </div>
-
-              {/* Submit */}
               <button
                 onClick={handleSubmit}
                 disabled={loading}
-                className="group flex w-full items-center justify-center gap-2 rounded-xl bg-gradient-to-br from-[#8B1A1A] to-[#6B1212] py-3.5 text-sm font-medium text-white shadow-[0_8px_24px_-8px_rgba(139,26,26,0.6)] transition hover:shadow-[0_12px_32px_-8px_rgba(139,26,26,0.8)] disabled:opacity-60"
+                className="w-full bg-[#8B1A1A] text-white py-3 rounded-lg flex items-center justify-center gap-2"
               >
-                {loading ? (
-                  <Loader2 className="h-4 w-4 animate-spin" />
-                ) : (
-                  <>
-                    {mode === "login" ? "Masuk" : "Daftar"}
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-0.5" />
-                  </>
-                )}
+                {loading ? <Loader2 className="animate-spin" /> : null}
+                {mode === "login" ? "Login" : "Register"}
+                <ArrowRight />
               </button>
 
-              {/* Divider */}
-              <div className="flex items-center gap-3">
-                <div className="h-px flex-1 bg-[#8B1A1A]/10" />
-                <span className="text-xs text-[#3a1a1a]/40">atau</span>
-                <div className="h-px flex-1 bg-[#8B1A1A]/10" />
-              </div>
-
-              {/* Switch mode */}
               <button
-                onClick={switchMode}
-                className="w-full rounded-xl border border-[#8B1A1A]/20 py-3 text-sm font-medium text-[#8B1A1A] transition hover:bg-[#8B1A1A]/5"
+                onClick={() => {
+                  setMode(mode === "login" ? "register" : "login");
+                  setError("");
+                  setSuccess("");
+                }}
+                className="text-sm text-center w-full text-[#8B1A1A]"
               >
-                {mode === "login" ? "Belum punya akun? Daftar" : "Sudah punya akun? Masuk"}
+                {mode === "login"
+                  ? "Belum punya akun? Register"
+                  : "Sudah punya akun? Login"}
               </button>
+
             </div>
           </div>
         </div>
       </div>
-
-      {/* Keyframes */}
-      <style>{`
-        @keyframes fadeIn {
-          from { opacity: 0; }
-          to { opacity: 1; }
-        }
-        @keyframes modalIn {
-          from { opacity: 0; transform: scale(0.92) translateY(20px); }
-          to { opacity: 1; transform: scale(1) translateY(0); }
-        }
-      `}</style>
     </div>
   );
 };
