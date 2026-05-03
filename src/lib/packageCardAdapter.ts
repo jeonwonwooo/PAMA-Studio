@@ -13,72 +13,100 @@ type DbPackage = {
 };
 
 function formatIDR(n: number) {
-  // hasil mirip yang kamu pakai di file statis: "Rp 40.000"
   return "Rp " + new Intl.NumberFormat("id-ID").format(n);
 }
 
-function defaultImagesByType(type: DbPackage["type"]) {
-  // pakai aset yang SUDAH ADA di repo kamu (sesuai app/paket/page.tsx yang sekarang)
-  // self_photo: foto6/foto7/molding
-  // pas_foto: pasfoto1
-  // photographer: fallback ke foto11/foto12 (kamu bisa ganti belakangan)
-  if (type === "pas_foto") {
-    return {
-      image: "/images/pasfoto1.jpg",
-      galleryImages: ["/images/foto11.jpg", "/images/foto12.jpg", "/images/foto1.jpg", "/images/foto3.jpg"],
-    };
-  }
-  if (type === "photographer") {
-    return {
-      image: "/images/foto11.jpg",
-      galleryImages: ["/images/foto11.jpg", "/images/foto12.jpg", "/images/foto1.jpg", "/images/foto3.jpg"],
-    };
-  }
-  return {
+function getGroupKey(p: DbPackage): string {
+  const t = p.title.toLowerCase();
+  if (t.includes("studio 1")) return "Studio 1";
+  if (t.includes("studio 2") && t.includes("molding")) return "Studio 2 (Molding)";
+  if (t.includes("studio 2")) return "Studio 2";
+  if (p.type === "pas_foto") return "Pas Foto";
+  if (p.type === "photographer") return "Jasa Fotografer";
+  return p.title;
+}
+
+function defaultImagesByGroup(groupKey: string) {
+  if (groupKey === "Studio 1") return {
     image: "/images/foto6.jpg",
     galleryImages: ["/images/foto1.jpg", "/images/foto2.jpg", "/images/foto3.jpg", "/images/foto4.jpg", "/images/foto5.jpg", "/images/foto6.jpg"],
   };
+  if (groupKey === "Studio 2 (Molding)") return {
+    image: "/images/molding.jpeg",
+    galleryImages: ["/images/foto7.jpg", "/images/foto8.jpg", "/images/foto9.jpg", "/images/foto10.jpg"],
+  };
+  if (groupKey === "Studio 2") return {
+    image: "/images/foto7.jpg",
+    galleryImages: ["/images/foto7.jpg", "/images/foto8.jpg", "/images/foto9.jpg", "/images/foto10.jpg"],
+  };
+  if (groupKey === "Pas Foto") return {
+    image: "/images/pasfoto1.jpg",
+    galleryImages: ["/images/foto11.jpg", "/images/foto12.jpg", "/images/foto1.jpg", "/images/foto3.jpg"],
+  };
+  return {
+    image: "/images/foto11.jpg",
+    galleryImages: ["/images/foto11.jpg", "/images/foto12.jpg", "/images/foto1.jpg", "/images/foto3.jpg"],
+  };
 }
 
-export function toPackageCardDataFromDb(p: DbPackage): PackageData {
-  const { image, galleryImages } = defaultImagesByType(p.type);
+function getSubtitle(type: DbPackage["type"]) {
+  if (type === "self_photo") return "Self Photo Studio";
+  if (type === "pas_foto") return "Pas Foto";
+  return "Jasa Fotografer";
+}
 
-  const people =
-    p.min_people && p.max_people
-      ? `${p.min_people}-${p.max_people} orang`
-      : p.max_people
-        ? `Maks ${p.max_people} orang`
-        : "—";
+export function groupPackagesToCards(rows: DbPackage[]): PackageData[] {
+  const groupMap = new Map<string, DbPackage[]>();
 
-  const dur = p.duration_minutes ? `${p.duration_minutes} menit` : "Jadwal menyesuaikan admin";
+  for (const row of rows) {
+    const key = getGroupKey(row);
+    if (!groupMap.has(key)) groupMap.set(key, []);
+    groupMap.get(key)!.push(row);
+  }
 
-  // supPackages: supaya "Pilihan Paket" tetap kepakai, kita isi 1 row yang meaningful:
-  // (Nanti kalau kamu mau persis seperti pricelist per kategori, kita bisa bikin view/grouping.)
-  const subPackages = [
-    {
-      name: "Booking",
-      description: `${people} • ${dur}`,
-      price: formatIDR(p.base_price_idr),
-    },
-  ];
+  const result: PackageData[] = [];
 
-  // additional: sementara kita tampilkan kosong (atau bisa isi dari table addons nanti per tipe)
-  const additionals = undefined;
+  for (const [groupKey, items] of groupMap) {
+    items.sort((a, b) => a.base_price_idr - b.base_price_idr);
+    const first = items[0];
+    const { image, galleryImages } = defaultImagesByGroup(groupKey);
 
-  const subtitle =
-    p.type === "self_photo" ? "Self Photo Studio" : p.type === "pas_foto" ? "Pas Foto" : "Jasa Fotografer";
+    const subPackages = items.map((p) => {
+      const people =
+        p.min_people && p.max_people ? `${p.min_people}-${p.max_people} orang`
+        : p.max_people ? `Maks ${p.max_people} orang`
+        : "";
+      const dur = p.duration_minutes ? `${p.duration_minutes} menit` : "";
 
-  return {
-    id: p.id, // penting: sekarang id = uuid dari DB
-    title: p.title,
-    subtitle,
-    description: p.includes ?? p.description ?? "",
-    image,
-    galleryImages,
-    subPackages,
-    additionals,
-    ctaLabel: "Booking Sekarang",
-    ctaLink: `/checkout?packageId=${encodeURIComponent(p.id)}`,
-    accent: "maroon",
-  };
+      // Ambil nama varian: bagian setelah "—" di title
+      const variantName = p.title.includes("—")
+        ? p.title.split("—").pop()?.trim() ?? p.title
+        : p.title
+            .replace(/studio \d+/gi, "")
+            .replace(/\(.*?\)/gi, "")
+            .trim() || p.title;
+
+      return {
+        name: variantName,
+        description: [people, dur].filter(Boolean).join(" • "),
+        price: formatIDR(p.base_price_idr),
+      };
+    });
+
+    result.push({
+      id: groupKey.toLowerCase().replace(/\s+/g, "-").replace(/[()]/g, ""),
+      title: groupKey,
+      subtitle: getSubtitle(first.type),
+      description: first.includes ?? first.description ?? "",
+      image,
+      galleryImages,
+      subPackages,
+      additionals: undefined,
+      ctaLabel: "Booking Sekarang",
+      ctaLink: `/checkout?packageId=${encodeURIComponent(first.id)}`,
+      accent: "maroon",
+    });
+  }
+
+  return result;
 }

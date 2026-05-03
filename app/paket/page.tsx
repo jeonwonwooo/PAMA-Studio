@@ -5,7 +5,7 @@ import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import PackageCard from "@/components/paket/PackageCard";
 import { createSupabaseServerClient } from "@/lib/supabase/server";
-import { toPackageCardDataFromDb } from "@/lib/packageCardAdapter";
+import {  groupPackagesToCards } from "@/lib/packageCardAdapter";
 
 type FilterKey =
   | "all"
@@ -91,8 +91,6 @@ export default async function PaketPage({
   const page = Math.max(1, Number(sp.page ?? "1") || 1);
 
   const pageSize = 4; // kamu bisa ubah: 3/4/5 sesuai taste
-  const from = (page - 1) * pageSize;
-  const to = from + pageSize - 1;
 
   const supabase = await createSupabaseServerClient();
 
@@ -124,16 +122,15 @@ export default async function PaketPage({
       break;
   }
 
-  // order + pagination
-  const { data, error, count } = await q
+  const { data, error } = await q
     .order("type", { ascending: true })
-    .order("base_price_idr", { ascending: true })
-    .range(from, to);
+    .order("base_price_idr", { ascending: true });
 
-  const total = count ?? 0;
+  const allCards = groupPackagesToCards(Array.isArray(data) ? data : []);
+  const total = allCards.length;
+  const from = (page - 1) * pageSize;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
-
-  const cards = (data ?? []).map((p: any) => toPackageCardDataFromDb(p));
+  const cards = allCards.slice(from, from + pageSize);
 
   return (
     <div className="min-h-screen bg-[#FBF7F1] text-[#1a0505]">
@@ -165,7 +162,7 @@ export default async function PaketPage({
           </div>
 
           <div className="mt-3 text-xs text-[#3a1a1a]/60" style={{ fontFamily: "Inter Tight, sans-serif" }}>
-            Menampilkan {total === 0 ? 0 : from + 1}–{Math.min(total, to + 1)} dari {total} paket
+            Menampilkan {total === 0 ? 0 : from + 1}–{Math.min(total, from + pageSize)} dari {total} paket
           </div>
         </div>
       </section>
