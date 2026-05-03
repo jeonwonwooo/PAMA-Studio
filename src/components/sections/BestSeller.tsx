@@ -12,26 +12,26 @@ const BestSeller: React.FC = () => {
 
   const packages = [
     {
-      name: "Signature Solo",
-      price: "IDR 299K",
+      name: "",
+      price: "Pas Foto",
       tag: "Paling Populer",
       features: ["1 Orang", "30 menit sesi", "15 foto edit", "2 wardrobe"],
-      img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=600&h=700&fit=crop",
+      img: "/images/pasfoto.jpg",
     },
     {
-      name: "Duo Portrait",
-      price: "IDR 499K",
+      name: "",
+      price: "Duo - Self Photo Studio 1",
       tag: "Favorit Couple",
-      features: ["2 Orang", "45 menit sesi", "25 foto edit", "3 wardrobe"],
-      img: "https://images.unsplash.com/photo-1529626455594-4ff0802cfb7e?w=600&h=700&fit=crop",
+      features: ["1-2 Orang", "10 menit sesi", "1 Print 4R"],
+      img: "/images/duo.jpg",
       featured: true,
     },
     {
-      name: "Squad Session",
-      price: "IDR 899K",
+      name: "",
+      price: "Basic - Self Photo Studio 1",
       tag: "Terlaris Grup",
-      features: ["Up to 6 Orang", "60 menit sesi", "40 foto edit", "Free props"],
-      img: "https://images.unsplash.com/photo-1529156069898-49953e39b3ac?w=600&h=700&fit=crop",
+      features: ["1-3 Orang", "15 menit sesi", "1 Print 4R"],
+      img: "/images/basic.jpg",
     },
   ];
 
@@ -97,24 +97,31 @@ const BestSeller: React.FC = () => {
         </div>
 
         {/* Cards */}
-        <div ref={cardsRef} className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3">
-          {packages.map((p, i) => (
-            <div
-              key={i}
-              className={[
-                "group relative overflow-hidden rounded-[28px] transition-all duration-700",
-                p.featured
-                  ? "bg-[#FBF7F1] shadow-[0_30px_60px_-20px_rgba(0,0,0,0.5)] lg:-translate-y-4"
-                  : "bg-white/95 hover:-translate-y-2",
-              ].join(" ")}
-              style={{
-                opacity: cardsVisible ? 1 : 0,
-                transform: cardsVisible
-                  ? `translateY(${p.featured ? "-16px" : "0"}) scale(1) rotateX(0deg)`
-                  : `translateY(80px) scale(0.9) rotateX(6deg)`,
-                transition: `opacity 0.8s cubic-bezier(0.16,1,0.3,1) ${0.15 + i * 0.18}s, transform 0.8s cubic-bezier(0.16,1,0.3,1) ${0.15 + i * 0.18}s`,
-              }}
-            >
+<div
+  ref={cardsRef}
+  className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-end"
+>
+  {packages.map((p, i) => (
+    <div
+      key={i}
+className={[
+  "group relative overflow-hidden rounded-[28px] h-full flex flex-col justify-between transform-gpu transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:scale-[1.015] hover:shadow-[0_24px_50px_-18px_rgba(0,0,0,0.22)]",
+  p.featured
+    ? "bg-[#FBF7F1]"
+    : "bg-white/95",
+].join(" ")}
+      style={{
+        opacity: cardsVisible ? 1 : 0,
+        transform: cardsVisible
+  ? "translateY(0) scale(1) rotateX(0deg)"
+  : "translateY(80px) scale(0.92) rotateX(6deg)",
+        transition: `opacity 0.8s cubic-bezier(0.16,1,0.3,1) ${
+          0.15 + i * 0.18
+        }s, transform 0.8s cubic-bezier(0.16,1,0.3,1) ${
+          0.15 + i * 0.18
+        }s`,
+      }}
+    >
               {/* Shimmer overlay on hover */}
               <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100"
                 style={{ transform: "skewX(-20deg) translateX(-100%)", animation: cardsVisible ? undefined : "none" }}
@@ -164,10 +171,10 @@ const BestSeller: React.FC = () => {
               <div className="p-6">
                 <div className="flex items-baseline justify-between">
                   <div
-                    className="text-3xl font-semibold text-[#1a0505]"
-                    style={{ fontFamily: "Fraunces, serif" }}
+                     className="min-h-[96px] text-3xl font-semibold text-[#1a0505] leading-tight"
+                      style={{ fontFamily: "Fraunces, serif" }}
                   >
-                    {p.price}
+                      {p.price}
                   </div>
                   <div
                     className="text-[11px] uppercase tracking-wider text-[#3a1a1a]/50"
@@ -207,20 +214,6 @@ const BestSeller: React.FC = () => {
                     </li>
                   ))}
                 </ul>
-
-                <Link
-                  href="/paket"
-                  className={[
-                    "mt-6 flex items-center justify-center gap-2 rounded-full px-5 py-3 text-sm font-medium transition",
-                    p.featured
-                      ? "bg-[#8B1A1A] text-white hover:bg-[#6B1212]"
-                      : "border border-[#8B1A1A]/30 text-[#8B1A1A] hover:bg-[#8B1A1A] hover:text-white hover:border-transparent",
-                  ].join(" ")}
-                  style={{ fontFamily: "Inter Tight, sans-serif" }}
-                >
-                  Pesan Sekarang
-                  <ArrowRight className="h-4 w-4" />
-                </Link>
               </div>
             </div>
           ))}
