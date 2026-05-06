@@ -17,29 +17,40 @@ const ChatbotWidget = () => {
             apiHost: "http://localhost:3000",
             theme: {
               button: {
-                backgroundColor: "#D8E2DC", // Sage Green Pastel
-                right: 25,
-                bottom: 25,
+                backgroundColor: "#8B1A1A", // PAMA Brand Red Maroon
+                right: 20,
+                bottom: 20,
                 size: "large",
                 zIndex: 9999,
+                iconColor: "#ffffff",
               },
               chatWindow: {
                 title: "PAMA Assistant",
-                welcomeMessage: "Halo! Ada yang bisa kami bantu di PAMA Studio?",
-                backgroundColor: "#FAF9F6",
-                fontSize: 16,
+                titleAvatarSrc: "/logo.png",
+                welcomeMessage: "Halo! 👋 Ada yang bisa kami bantu? Tanya tentang paket atau jadwal booking kami.",
+                backgroundColor: "#FBF7F1", // PAMA Cream Background
+                fontSize: 14,
+                fontFamily: "'Inter', sans-serif",
                 botMessage: {
-                  backgroundColor: "#ECE4DB",
-                  textColor: "#303235",
+                  backgroundColor: "#FFF8E7",
+                  textColor: "#1a0505",
+                  showAvatar: true,
+                  avatarSrc: "/logo.png",
                 },
                 userMessage: {
-                  backgroundColor: "#D8E2DC",
-                  textColor: "#303235",
+                  backgroundColor: "#8B1A1A",
+                  textColor: "#ffffff",
                 },
                 textInput: {
-                  placeholder: "Tanya paket atau jadwal...",
+                  placeholder: "Tanya paket, harga, atau jadwal...",
                   backgroundColor: "#ffffff",
-                  sendButtonColor: "#D8E2DC",
+                  textColor: "#1a0505",
+                  placeholderColor: "#999999",
+                  sendButtonColor: "#8B1A1A",
+                  focus: {
+                    backgroundColor: "#ffffff",
+                    borderColor: "#8B1A1A",
+                  }
                 }
               }
             }
