@@ -3,17 +3,24 @@
 import Script from 'next/script';
 
 const ChatbotWidget = () => {
+  const FLOWISE_CHATFLOW_ID = process.env.FLOWISE_CHATFLOW_ID; 
+
   return (
     <Script
-      src="https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
+      // ✅ PENTING: src HARUS CDN, BUKAN URL SERVER
+      src="https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js" 
       type="module"
       strategy="afterInteractive"
       onLoad={() => {
         const bot = (window as any).Chatbot;
+        
         if (bot) {
+          console.log("✅ Bot Loading...");
+          
           bot.init({
-            chatflowid: process.env.FLOWISE_CHATFLOW_ID,
+            chatflowid: FLOWISE_CHATFLOW_ID, // Gunakan ID Baru
             apiHost: process.env.FLOWISE_API_HOST || "http://localhost:3000",
+            
             theme: {
               button: {
                 backgroundColor: "#8B1A1A", // PAMA Brand Red Maroon
@@ -24,9 +31,9 @@ const ChatbotWidget = () => {
                 iconColor: "#ffffff",
               },
               chatWindow: {
-                title: "PAMA Assistant",
+                title: "PAMA Assistant 📸",
                 titleAvatarSrc: "/logo.png",
-                welcomeMessage: "Halo! 👋 Ada yang bisa kami bantu? Tanya tentang paket atau jadwal booking kami.",
+                welcomeMessage: "Halo Kak! 👋 Selamat datang di Pama Studio. Mau abadikan momen spesial apa hari ini? ✨",
                 backgroundColor: "#FBF7F1", // PAMA Cream Background
                 fontSize: 14,
                 fontFamily: "'Inter', sans-serif",
@@ -54,7 +61,14 @@ const ChatbotWidget = () => {
               }
             }
           });
+          
+          console.log("✅ Pama Bot Initialized & Connected to YOUR Server!");
+        } else {
+          console.error("❌ Chatbot script failed to load.");
         }
+      }}
+      onError={(error) => {
+        console.error('❌ Failed to load chatbot script:', error);
       }}
     />
   );
