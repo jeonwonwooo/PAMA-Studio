@@ -3,23 +3,40 @@
 import Script from 'next/script';
 
 const ChatbotWidget = () => {
-  const FLOWISE_CHATFLOW_ID = process.env.FLOWISE_CHATFLOW_ID; 
+  // Ambil nilai dari Environment Variables (Harus diisi di Render/Vercel)
+  const FLOWISE_CHATFLOW_ID = process.env.NEXT_PUBLIC_FLOWISE_CHATFLOW_ID; 
+  const FLOWISE_API_HOST = process.env.NEXT_PUBLIC_FLOWISE_API_HOST; 
 
   return (
     <Script
-      // ✅ PENTING: src HARUS CDN, BUKAN URL SERVER
       src="https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js" 
       type="module"
       strategy="afterInteractive"
       onLoad={() => {
         const bot = (window as any).Chatbot;
         
-        if (bot) {
-          console.log("✅ Bot Loading...");
-          
+        if (!bot) {
+          console.error("❌ Error: Library Flowise belum dimuat.");
+          return;
+        }
+
+        // Validasi Data
+        if (!FLOWISE_CHATFLOW_ID || !FLOWISE_API_HOST) {
+          console.error("❌ Error: Environment Variables belum diset!");
+          console.log("Cek terminal untuk melihat pesan error detail.");
+          return;
+        }
+
+        console.log("✅ Bot Loading...");
+        console.log("Target Server:", FLOWISE_API_HOST);
+        console.log("Target ID:", FLOWISE_CHATFLOW_ID);
+
+        try {
           bot.init({
-            chatflowid: FLOWISE_CHATFLOW_ID, // Gunakan ID Baru
-            apiHost: process.env.FLOWISE_API_HOST || "http://localhost:3000",
+            chatflowid: FLOWISE_CHATFLOW_ID,
+            
+            // Paksa gunakan URL dari env, pastikan format https://tanpa-slash
+            apiHost: FLOWISE_API_HOST.replace(/\/$/, ""), 
             
             theme: {
               button: {
@@ -63,8 +80,8 @@ const ChatbotWidget = () => {
           });
           
           console.log("✅ Pama Bot Initialized & Connected to YOUR Server!");
-        } else {
-          console.error("❌ Chatbot script failed to load.");
+        } catch (error) {
+          console.error("❌ Error initializing bot:", error);
         }
       }}
       onError={(error) => {
