@@ -9,12 +9,11 @@ const ChatbotWidget = () => {
       type="module"
       strategy="afterInteractive"
       onLoad={() => {
-        // Pake 'as any' biar TS diem & aman pas runtime
         const bot = (window as any).Chatbot;
         if (bot) {
           bot.init({
-            chatflowid: "ID-CHATFLOW-LU-GANTI-DI-SINI", 
-            apiHost: "http://localhost:3000",
+            chatflowid: process.env.FLOWISE_CHATFLOW_ID,
+            apiHost: process.env.FLOWISE_API_HOST || "http://localhost:3000",
             theme: {
               button: {
                 backgroundColor: "#8B1A1A", // PAMA Brand Red Maroon
