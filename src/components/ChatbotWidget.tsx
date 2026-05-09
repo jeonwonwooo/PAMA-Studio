@@ -3,44 +3,36 @@
 import Script from 'next/script';
 
 const ChatbotWidget = () => {
-  // Ambil nilai dari Environment Variables (Harus diisi di Render/Vercel)
-  const FLOWISE_CHATFLOW_ID = process.env.NEXT_PUBLIC_FLOWISE_CHATFLOW_ID; 
-  const FLOWISE_API_HOST = process.env.NEXT_PUBLIC_FLOWISE_API_HOST; 
+  const FLOWISE_CHATFLOW_ID = process.env.NEXT_PUBLIC_FLOWISE_CHATFLOW_ID;
+  const FLOWISE_API_HOST = process.env.NEXT_PUBLIC_FLOWISE_API_HOST;
 
   return (
     <Script
-      src="https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js" 
+      src="https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
       type="module"
       strategy="afterInteractive"
       onLoad={() => {
         const bot = (window as any).Chatbot;
-        
+
         if (!bot) {
           console.error("❌ Error: Library Flowise belum dimuat.");
           return;
         }
 
-        // Validasi Data
         if (!FLOWISE_CHATFLOW_ID || !FLOWISE_API_HOST) {
           console.error("❌ Error: Environment Variables belum diset!");
-          console.log("Cek terminal untuk melihat pesan error detail.");
+          console.error("NEXT_PUBLIC_FLOWISE_CHATFLOW_ID:", FLOWISE_CHATFLOW_ID);
+          console.error("NEXT_PUBLIC_FLOWISE_API_HOST:", FLOWISE_API_HOST);
           return;
         }
-
-        console.log("✅ Bot Loading...");
-        console.log("Target Server:", FLOWISE_API_HOST);
-        console.log("Target ID:", FLOWISE_CHATFLOW_ID);
 
         try {
           bot.init({
             chatflowid: FLOWISE_CHATFLOW_ID,
-            
-            // Paksa gunakan URL dari env, pastikan format https://tanpa-slash
-            apiHost: FLOWISE_API_HOST.replace(/\/$/, ""), 
-            
+            apiHost: FLOWISE_API_HOST.replace(/\/$/, ""),
             theme: {
               button: {
-                backgroundColor: "#8B1A1A", // PAMA Brand Red Maroon
+                backgroundColor: "#8B1A1A",
                 right: 20,
                 bottom: 20,
                 size: "large",
@@ -51,7 +43,7 @@ const ChatbotWidget = () => {
                 title: "PAMA Assistant 📸",
                 titleAvatarSrc: "/logo.png",
                 welcomeMessage: "Halo Kak! 👋 Selamat datang di Pama Studio. Mau abadikan momen spesial apa hari ini? ✨",
-                backgroundColor: "#FBF7F1", // PAMA Cream Background
+                backgroundColor: "#FBF7F1",
                 fontSize: 14,
                 fontFamily: "'Inter', sans-serif",
                 botMessage: {
@@ -73,13 +65,13 @@ const ChatbotWidget = () => {
                   focus: {
                     backgroundColor: "#ffffff",
                     borderColor: "#8B1A1A",
-                  }
-                }
-              }
-            }
+                  },
+                },
+              },
+            },
           });
-          
-          console.log("✅ Pama Bot Initialized & Connected to YOUR Server!");
+
+          console.log("✅ Pama Bot Initialized!");
         } catch (error) {
           console.error("❌ Error initializing bot:", error);
         }
