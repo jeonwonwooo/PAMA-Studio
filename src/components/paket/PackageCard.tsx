@@ -4,7 +4,7 @@ import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ChevronDown, ChevronUp, Eye, ArrowRight, Check, Sparkles } from "lucide-react";
-import { useInView } from "@/hooks/useInView"; // Sesuaikan path
+import { useInView } from "../../hooks/useInView"; // Sesuaikan path
 import GalleryModal from "./GalleryModal";
 
 /* ── Types ── */

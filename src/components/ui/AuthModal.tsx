@@ -3,7 +3,7 @@
 import React, { useEffect, useMemo, useState } from "react";
 import Image from "next/image";
 import { X, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/supabase-browser";
+import { createSupabaseBrowserClient } from "../../lib/supabase/supabase-browser";
 import { useRouter } from "next/navigation";
 
 type Mode = "login" | "register";

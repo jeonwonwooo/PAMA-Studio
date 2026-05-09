@@ -1,8 +1,8 @@
 "use client";
 
 import React from "react";
-import { useInView } from "@/hooks/useInView";
-import { useCountUp } from "@/hooks/useCountUp";
+import { useInView } from "../../hooks/useInView";
+import { useCountUp } from "../../hooks/useCountUp";
 
 interface StatItemProps {
   end: number;

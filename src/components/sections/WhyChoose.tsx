@@ -3,7 +3,7 @@
 import React from "react";
 import Image from "next/image";
 import { Sparkles, Camera, Wand2, HeartHandshake } from "lucide-react";
-import { useInView } from "@/hooks/useInView";
+import { useInView } from "../../hooks/useInView";
 
 const WhyChoose: React.FC = () => {
   const { ref: sectionRef, inView: sectionVisible } = useInView({ threshold: 0.1 });

@@ -1,4 +1,4 @@
-import type { PackageData } from "@/components/paket/PackageCard";
+import type { PackageData } from "../components/paket/PackageCard";
 
 type DbPackage = {
   id: string;

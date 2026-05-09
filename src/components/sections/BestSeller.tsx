@@ -4,7 +4,7 @@ import React from "react";
 import Image from "next/image";
 import Link from "next/link";
 import { ArrowRight, ChevronRight } from "lucide-react";
-import { useInView } from "@/hooks/useInView";
+import { useInView } from "../../hooks/useInView";
 
 const BestSeller: React.FC = () => {
   const { ref: headerRef, inView: headerVisible } = useInView({ threshold: 0.2 });
