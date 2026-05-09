@@ -2,8 +2,11 @@
 
 import Script from 'next/script';
 import { usePathname } from 'next/navigation';
+import { useState } from 'react';
+import { MessageCircle } from 'lucide-react';
 
 const ChatbotWidget = () => {
+  const [isError, setIsError] = useState(false);
   const pathname = usePathname();
   const FLOWISE_CHATFLOW_ID = process.env.NEXT_PUBLIC_FLOWISE_CHATFLOW_ID;
   const FLOWISE_API_HOST = process.env.NEXT_PUBLIC_FLOWISE_API_HOST;
@@ -14,7 +17,8 @@ const ChatbotWidget = () => {
   }
 
   return (
-    <Script
+    <>
+      <Script
       src="https://cdn.jsdelivr.net/npm/flowise-embed/dist/web.js"
       type="module"
       strategy="afterInteractive"
@@ -40,21 +44,33 @@ const ChatbotWidget = () => {
             theme: {
               button: {
                 backgroundColor: "#8B1A1A",
-                right: 20,
-                bottom: 20,
+                right: 25,
+                bottom: 25,
                 size: "large",
-                zIndex: 9999,
+                dragAndDrop: true,
                 iconColor: "#ffffff",
               },
-              chatWindow: {
-                title: "PAMA Assistant 📸",
-                titleAvatarSrc: "/logo.png",
-                welcomeMessage: "Halo Kak! 👋 Selamat datang di PAMA Studio. Mau abadikan momen spesial apa hari ini? ✨",
-                backgroundColor: "#FBF7F1",
+              tooltip: {
+                showTooltip: true,
+                tooltipMessage: "Ada yang bisa dibantu? 👋",
+                tooltipBackgroundColor: "#8B1A1A",
+                tooltipTextColor: "#ffffff",
                 fontSize: 14,
-                fontFamily: "'Inter', sans-serif",
+              },
+              chatWindow: {
+                showTitle: true,
+                title: "PAMA Assistant",
+                titleAvatarSrc: "/logo.png",
+                showAgentMessages: true,
+                welcomeMessage: "Halo Kak! 👋 Selamat datang di **PAMA Studio**. Saya asisten digital Anda. Ada yang bisa saya bantu terkait informasi paket atau cara booking hari ini? ✨",
+                errorMessage: "Maaf, terjadi kendala teknis. Silakan coba lagi nanti.",
+                backgroundColor: "#FBF7F1",
+                height: 600,
+                width: 400,
+                fontSize: 15,
+                fontFamily: "'Inter Tight', sans-serif",
                 botMessage: {
-                  backgroundColor: "#FFF8E7",
+                  backgroundColor: "#ffffff",
                   textColor: "#1a0505",
                   showAvatar: true,
                   avatarSrc: "/logo.png",
@@ -62,46 +78,59 @@ const ChatbotWidget = () => {
                 userMessage: {
                   backgroundColor: "#8B1A1A",
                   textColor: "#ffffff",
+                  showAvatar: false,
                 },
                 textInput: {
-                  placeholder: "Tanya paket, harga, atau rekomendasi...",
+                  placeholder: "Ketik pesan Anda di sini...",
                   backgroundColor: "#ffffff",
                   textColor: "#1a0505",
-                  placeholderColor: "#999999",
                   sendButtonColor: "#8B1A1A",
-                  focus: {
-                    backgroundColor: "#ffffff",
-                    borderColor: "#8B1A1A",
-                  },
+                  maxChars: 200,
+                  maxCharsWarningMessage: "Pesan terlalu panjang. Maksimal 200 karakter.",
+                  autoFocus: true,
                 },
                 feedback: {
                   color: "#8B1A1A",
                 },
                 footer: {
                   textColor: "#3a1a1a",
-                  text: "Powered by PAMA Studio",
-                  company: "PAMA Studio",
-                  companyLink: "https://pama-studio.onrender.com",
+                  text: "Official PAMA Studio Assistant",
                 },
                 starterPrompts: [
-                  "Lihat Paket Foto",
-                  "Cara Booking",
-                  "Lokasi Studio",
-                  "Cek Promo Terbaru"
+                  "📷 Lihat Pilihan Paket",
+                  "📅 Cara Booking Jadwal",
+                  "📍 Lokasi & Jam Operasional",
                 ],
               },
             },
           });
 
-          console.log("PAMA Studio Assistant Initialized!");
+          console.log("PAMA Studio Assistant Initialized with Premium UI!");
         } catch (error) {
           console.error("Terjadi kesalahan, hubungi admin.", error);
+          setIsError(true);
         }
       }}
       onError={(error) => {
         console.error('Terjadi kesalahan, hubungi admin.', error);
+        setIsError(true);
       }}
     />
+    {isError && (
+      <a
+        href="https://wa.me/6282331555431"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="fixed bottom-[25px] right-[25px] z-[9999] flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-all hover:scale-110 active:scale-95"
+        title="Hubungi Admin via WhatsApp"
+      >
+        <MessageCircle size={32} />
+        <span className="absolute -left-32 top-1/2 -translate-y-1/2 rounded-lg bg-[#8B1A1A] px-3 py-1.5 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100 sm:block hidden">
+          Chat Admin (Fallback)
+        </span>
+      </a>
+    )}
+    </>
   );
 };
 
