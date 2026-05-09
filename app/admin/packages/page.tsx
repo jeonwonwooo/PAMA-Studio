@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { supabase } from '@/lib/supabase';
+import { supabase } from '../../../src/lib/supabase';
 import { Plus, Edit2, Trash2, Save, X, Printer, Clock, Users, Layers } from 'lucide-react';
 
 // Interface disesuaikan dengan schema database (lowercase)
