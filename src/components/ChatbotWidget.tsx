@@ -1,10 +1,17 @@
 'use client';
 
 import Script from 'next/script';
+import { usePathname } from 'next/navigation';
 
 const ChatbotWidget = () => {
+  const pathname = usePathname();
   const FLOWISE_CHATFLOW_ID = process.env.NEXT_PUBLIC_FLOWISE_CHATFLOW_ID;
   const FLOWISE_API_HOST = process.env.NEXT_PUBLIC_FLOWISE_API_HOST;
+
+  // Don't show chatbot on admin pages
+  if (pathname?.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <Script
@@ -15,12 +22,12 @@ const ChatbotWidget = () => {
         const bot = (window as any).Chatbot;
 
         if (!bot) {
-          console.error("❌ Error: Library Flowise belum dimuat.");
+          console.error("Terjadi kesalahan, hubungi admin.");
           return;
         }
 
         if (!FLOWISE_CHATFLOW_ID || !FLOWISE_API_HOST) {
-          console.error("❌ Error: Environment Variables belum diset!");
+          console.error("Terjadi kesalahan, hubungi admin.");
           console.error("NEXT_PUBLIC_FLOWISE_CHATFLOW_ID:", FLOWISE_CHATFLOW_ID);
           console.error("NEXT_PUBLIC_FLOWISE_API_HOST:", FLOWISE_API_HOST);
           return;
@@ -42,7 +49,7 @@ const ChatbotWidget = () => {
               chatWindow: {
                 title: "PAMA Assistant 📸",
                 titleAvatarSrc: "/logo.png",
-                welcomeMessage: "Halo Kak! 👋 Selamat datang di Pama Studio. Mau abadikan momen spesial apa hari ini? ✨",
+                welcomeMessage: "Halo Kak! 👋 Selamat datang di PAMA Studio. Mau abadikan momen spesial apa hari ini? ✨",
                 backgroundColor: "#FBF7F1",
                 fontSize: 14,
                 fontFamily: "'Inter', sans-serif",
@@ -57,7 +64,7 @@ const ChatbotWidget = () => {
                   textColor: "#ffffff",
                 },
                 textInput: {
-                  placeholder: "Tanya paket, harga, atau jadwal...",
+                  placeholder: "Tanya paket, harga, atau rekomendasi...",
                   backgroundColor: "#ffffff",
                   textColor: "#1a0505",
                   placeholderColor: "#999999",
@@ -67,17 +74,32 @@ const ChatbotWidget = () => {
                     borderColor: "#8B1A1A",
                   },
                 },
+                feedback: {
+                  color: "#8B1A1A",
+                },
+                footer: {
+                  textColor: "#3a1a1a",
+                  text: "Powered by PAMA Studio",
+                  company: "PAMA Studio",
+                  companyLink: "https://pama-studio.onrender.com",
+                },
+                starterPrompts: [
+                  "Lihat Paket Foto",
+                  "Cara Booking",
+                  "Lokasi Studio",
+                  "Cek Promo Terbaru"
+                ],
               },
             },
           });
 
-          console.log("✅ Pama Bot Initialized!");
+          console.log("PAMA Studio Assistant Initialized!");
         } catch (error) {
-          console.error("❌ Error initializing bot:", error);
+          console.error("Terjadi kesalahan, hubungi admin.", error);
         }
       }}
       onError={(error) => {
-        console.error('❌ Failed to load chatbot script:', error);
+        console.error('Terjadi kesalahan, hubungi admin.', error);
       }}
     />
   );
