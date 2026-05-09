@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect, useRef } from "react";
+import React, { useState, useEffect, useRef, useMemo } from "react";
 import Image from "next/image";
 import { Menu, X, ShoppingBag, ArrowUpRight, User, LogOut, LayoutDashboard } from "lucide-react";
 import AuthModal from "../ui/AuthModal";
@@ -14,10 +14,11 @@ const Navbar: React.FC = () => {
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
   const [dropdownOpen, setDropdownOpen] = useState(false);
+  const [ready, setReady] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
   const router = useRouter();
-  const supabase = createSupabaseBrowserClient();
+  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 20);
@@ -26,28 +27,32 @@ const Navbar: React.FC = () => {
     return () => window.removeEventListener("scroll", onScroll);
   }, []);
 
-  useEffect(() => {
-    const init = async () => {
-      const { data: { user } } = await supabase.auth.getUser();
-      setUser(user);
-      if (user) {
-        const { data: p } = await supabase.from("profiles").select("full_name, email").eq("id", user.id).single();
-        setProfile(p);
-      }
-    };
-    init();
+  const loadProfile = async (userId: string) => {
+    const { data } = await supabase.from("profiles").select("full_name, email, role").eq("id", userId).single();
+    setProfile(data);
+  };
 
-    const { data: sub } = supabase.auth.onAuthStateChange(async (_e, session) => {
+  useEffect(() => {
+    // Cek session awal
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      setUser(session?.user ?? null);
+      if (session?.user) loadProfile(session.user.id);
+      setReady(true);
+    });
+
+    // Listen perubahan auth
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setUser(session?.user ?? null);
       if (session?.user) {
-        const { data: p } = await supabase.from("profiles").select("full_name, email").eq("id", session.user.id).single();
-        setProfile(p);
+        loadProfile(session.user.id);
       } else {
         setProfile(null);
       }
+      setReady(true);
     });
-    return () => sub.subscription.unsubscribe();
-  }, []);
+
+    return () => subscription.unsubscribe();
+  }, [supabase]);
 
   // Close dropdown on outside click
   useEffect(() => {
@@ -60,19 +65,19 @@ const Navbar: React.FC = () => {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  const handlePesanClick = async () => {
+  const handlePesanClick = () => {
     if (user) router.push("/paket");
     else setAuthOpen(true);
   };
 
- const handleLogout = async () => {
-  console.log("logout clicked");
-  const { error } = await supabase.auth.signOut();
-  console.log("signOut result:", error);
-  setDropdownOpen(false);
-  router.push("/");
-  router.refresh();
-};
+  const handleLogout = async () => {
+    await supabase.auth.signOut();
+    setUser(null);
+    setProfile(null);
+    setDropdownOpen(false);
+    router.push("/");
+    router.refresh();
+  };
 
   const initials = profile?.full_name
     ? profile.full_name.split(" ").map((w: string) => w[0]).slice(0, 2).join("").toUpperCase()
@@ -90,7 +95,8 @@ const Navbar: React.FC = () => {
       <header className={["fixed top-0 left-0 right-0 z-50 transition-all duration-500", scrolled ? "py-3" : "py-5"].join(" ")}>
         <div className="mx-auto max-w-7xl px-5 lg:px-8">
           <div className={["relative flex items-center justify-between rounded-full border transition-all duration-500",
-            scrolled ? "border-white/40 bg-[#ffffff]/90 backdrop-blur-xl shadow-[0_8px_32px_-12px_rgba(120,20,20,0.25)] px-4 py-2"
+            scrolled
+              ? "border-white/40 bg-[#ffffff]/90 backdrop-blur-xl shadow-[0_8px_32px_-12px_rgba(120,20,20,0.25)] px-4 py-2"
               : "border-white/30 bg-[#ffffff]/70 backdrop-blur-md px-5 py-3"].join(" ")}>
 
             {/* Logo */}
@@ -123,43 +129,60 @@ const Navbar: React.FC = () => {
                 Pesan <ArrowUpRight className="h-3.5 w-3.5" />
               </button>
 
-              {user ? (
+              {/* Selalu render area kanan, tapi kondisional isinya */}
+              {ready && (
                 <>
-                  {/* Shopping bag */}
-                  <button onClick={() => router.push("/dashboard-client")} className="hidden sm:flex h-10 w-10 items-center justify-center rounded-full border border-[#8B1A1A]/20 bg-white/70 text-[#8B1A1A]">
-                    <ShoppingBag className="h-4 w-4" />
-                  </button>
+                  {user ? (
+                    <>
+                      {/* Shopping bag */}
+                      <button onClick={() => router.push("/dashboard-client")}
+                        className="hidden sm:flex h-10 w-10 items-center justify-center rounded-full border border-[#8B1A1A]/20 bg-white/70 text-[#8B1A1A]">
+                        <ShoppingBag className="h-4 w-4" />
+                      </button>
 
-                  {/* Profile dropdown */}
-                  <div className="relative" ref={dropdownRef}>
-                    <button onClick={() => setDropdownOpen(v => !v)}
-                      className="hidden sm:flex h-10 w-10 items-center justify-center rounded-full bg-[#8B1A1A] text-white text-sm font-bold hover:bg-[#6B1212] transition">
-                      {initials}
-                    </button>
+                      {/* Avatar dropdown */}
+                      <div className="relative hidden sm:block" ref={dropdownRef}>
+                        <button
+                          onClick={() => setDropdownOpen(v => !v)}
+                          className="flex h-10 w-10 items-center justify-center rounded-full bg-[#8B1A1A] text-white text-sm font-bold hover:bg-[#6B1212] transition"
+                        >
+                          {initials}
+                        </button>
 
-                    {dropdownOpen && (
-                      <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-50">
-                        <div className="px-4 py-3 border-b border-gray-100">
-                          <p className="text-sm font-bold text-gray-800 truncate">{profile?.full_name ?? "User"}</p>
-                          <p className="text-xs text-gray-400 truncate">{profile?.email ?? ""}</p>
-                        </div>
-                        <button onClick={() => { router.push("/dashboard-client"); setDropdownOpen(false); }}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition">
-                          <LayoutDashboard size={16} /> Dashboard
-                        </button>
-                        <button onClick={handleLogout}
-                          className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition">
-                          <LogOut size={16} /> Keluar
-                        </button>
+                        {dropdownOpen && (
+                          <>
+                            <div className="fixed inset-0 z-10" onClick={() => setDropdownOpen(false)} />
+                            <div className="absolute right-0 mt-2 w-52 bg-white rounded-2xl shadow-xl border border-gray-100 overflow-hidden z-20">
+                              <div className="px-4 py-3 border-b border-gray-100">
+                                <p className="text-sm font-bold text-gray-800 truncate">{profile?.full_name ?? "User"}</p>
+                                <p className="text-xs text-gray-400 truncate">{profile?.email ?? ""}</p>
+                              </div>
+                              <button onClick={() => { router.push("/dashboard-client"); setDropdownOpen(false); }}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                <LayoutDashboard size={16} /> Dashboard
+                              </button>
+                              {profile?.role === "admin" && (
+                                <button onClick={() => { router.push("/admin"); setDropdownOpen(false); }}
+                                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition">
+                                  <ShoppingBag size={16} /> Admin Panel
+                                </button>
+                              )}
+                              <button onClick={handleLogout}
+                                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-red-600 hover:bg-red-50 transition">
+                                <LogOut size={16} /> Keluar
+                              </button>
+                            </div>
+                          </>
+                        )}
                       </div>
-                    )}
-                  </div>
+                    </>
+                  ) : (
+                    <button onClick={() => setAuthOpen(true)}
+                      className="hidden sm:flex items-center gap-1.5 rounded-full border border-[#8B1A1A]/20 bg-white/70 px-4 py-2 text-sm font-medium text-[#8B1A1A] hover:bg-white transition">
+                      <User className="h-4 w-4" /> Masuk
+                    </button>
+                  )}
                 </>
-              ) : (
-                <button onClick={() => setAuthOpen(true)}
-                  className="hidden sm:flex items-center gap-1.5 rounded-full border border-[#8B1A1A]/20 bg-white/70 px-4 py-2 text-sm font-medium text-[#8B1A1A] hover:bg-white transition">
-                  <User className="h-4 w-4" /> Masuk
-                </button>
               )}
 
               <button onClick={() => setMenuOpen(v => !v)}
@@ -179,10 +202,20 @@ const Navbar: React.FC = () => {
               ))}
               {user ? (
                 <>
+                  <div className="px-4 py-3 border-t border-gray-100 mt-1">
+                    <p className="text-sm font-bold text-gray-800">{profile?.full_name ?? "User"}</p>
+                    <p className="text-xs text-gray-400">{profile?.email ?? ""}</p>
+                  </div>
                   <button onClick={() => { router.push("/dashboard-client"); setMenuOpen(false); }}
-                    className="mt-2 w-full flex items-center gap-2 rounded-2xl border border-[#8B1A1A]/20 px-4 py-3 text-sm text-[#8B1A1A]">
+                    className="w-full flex items-center gap-2 rounded-2xl border border-[#8B1A1A]/20 px-4 py-3 text-sm text-[#8B1A1A] mt-1">
                     <LayoutDashboard size={16} /> Dashboard
                   </button>
+                  {profile?.role === "admin" && (
+                    <button onClick={() => { router.push("/admin"); setMenuOpen(false); }}
+                      className="mt-2 w-full flex items-center gap-2 rounded-2xl border border-[#8B1A1A]/20 px-4 py-3 text-sm text-[#8B1A1A]">
+                      <ShoppingBag size={16} /> Admin Panel
+                    </button>
+                  )}
                   <button onClick={handleLogout}
                     className="mt-2 w-full rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 font-semibold">
                     Keluar

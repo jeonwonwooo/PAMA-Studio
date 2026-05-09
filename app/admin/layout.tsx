@@ -25,7 +25,6 @@ const menuItems = [
   { name: 'Automation', icon: Clock, path: '/admin/automation' },
   { name: 'Monitoring', icon: Monitor, path: '/admin/monitoring' },
   { name: 'Page Management', icon: FileText, path: '/admin/pages' },
-  { name: 'Master Data', icon: Settings, path: '/admin/packages' },
   { name: 'Settings', icon: Settings, path: '/admin/settings' },
 ];
 
@@ -36,9 +35,9 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   return (
     <div className="flex h-screen bg-gray-50 overflow-hidden">
       {/* SIDEBAR MERAH */}
-      <aside className="w-64 bg-red-600 text-white flex flex-col shadow-lg flex-shrink-0 z-20">
+      <aside className="w-64 bg-[#8B1A1A]  text-white flex flex-col shadow-lg flex-shrink-0 z-20">
         {/* Logo Area */}
-      <div className="p-6 border-b border-red-700 flex items-center gap-3">
+      <div className="p-6 border-b border-[#8B1A1A] flex items-center gap-3">
         <div className="relative h-10 w-10 flex-shrink-0 overflow-hidden rounded-xl bg-white">
           <Image src="/logo.png" alt="Logo PAMA" fill className="object-contain p-1" />
         </div>
@@ -55,8 +54,8 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
                 href={item.path}
                 className={`flex items-center gap-3 px-4 py-3 rounded-lg transition-all duration-200 ${
                   isActive 
-                    ? 'bg-red-700 text-white shadow-md' 
-                    : 'text-red-100 hover:bg-red-700 hover:text-white'
+                    ? 'bg-[#6B1212] text-white shadow-md' 
+                    : 'text-red-100 hover:bg-[#6B1212] hover:text-white'
                 }`}
               >
                 <item.icon size={20} />
@@ -67,7 +66,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
         </nav>
 
         {/* User Profile Bottom */}
-        <div className="p-4 border-t border-red-700 flex-shrink-0">
+        <div className="p-4 border-t border-[#6B1212] flex-shrink-0">
           <div className="flex items-center gap-3 mb-4">
             <img 
               src="https://ui-avatars.com/api/?name=Super+Admin&background=random" 
@@ -80,14 +79,14 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </div>
           </div>
           
-          <button className="flex items-center gap-2 w-full px-4 py-2 text-red-100 hover:bg-red-700 rounded-lg transition-colors">
+          <button className="flex items-center gap-2 w-full px-4 py-2 text-red-100 hover:bg-[#6B1212] rounded-lg transition-colors">
             <LogOut size={18} />
             <span>Logout</span>
           </button>
         </div>
         
         {/* Copyright */}
-        <div className="p-4 text-xs text-red-200 text-center border-t border-red-700 flex-shrink-0">
+        <div className="p-4 text-xs text-red-200 text-center border-t border-[#6B1212] flex-shrink-0">
           © 2025 PAMA STUDIO<br/>All rights reserved.
         </div>
       </aside>
