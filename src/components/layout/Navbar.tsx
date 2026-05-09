@@ -99,7 +99,7 @@ const Navbar: React.FC = () => {
                 <div className="absolute inset-0 rounded-full bg-[#8B1A1A]/10 blur-sm" />
                 <div className="absolute inset-0 rounded-full border border-[#8B1A1A]/25 z-10" />
                 <div className="relative h-full w-full overflow-hidden rounded-full bg-white">
-                  <Image src="/logo.png" alt="Logo PAMA" fill className="object-contain p-1" />
+                  <Image src="/logo.png" alt="Logo PAMA" fill sizes="44px" className="object-contain p-1" />
                 </div>
               </div>
               <div className="leading-none">

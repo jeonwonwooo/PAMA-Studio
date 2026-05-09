@@ -1,7 +1,7 @@
 import type { Metadata } from "next";
 import { Inter_Tight, Fraunces } from "next/font/google";
 import "./globals.css";
-import ChatbotWidget from '@/components/ChatbotWidget';
+import ChatbotWidget from '../src/components/ChatbotWidget';
 
 const interTight = Inter_Tight({ 
   subsets: ["latin"],

@@ -1,11 +1,11 @@
 import React from "react";
 import Link from "next/link";
 import { Camera, Sparkles, Users, ArrowLeft, ChevronLeft, ChevronRight } from "lucide-react";
-import Navbar from "@/components/layout/Navbar";
-import Footer from "@/components/layout/Footer";
-import PackageCard from "@/components/paket/PackageCard";
-import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
-import {  groupPackagesToCards } from "@/lib/packageCardAdapter";
+import Navbar from "../../src/components/layout/Navbar";
+import Footer from "../../src/components/layout/Footer";
+import PackageCard from "../../src/components/paket/PackageCard";
+import { createSupabaseServerClient } from "../../src/lib/supabase/supabase-server";
+import {  groupPackagesToCards } from "../../src/lib/packageCardAdapter";
 
 type FilterKey =
   | "all"

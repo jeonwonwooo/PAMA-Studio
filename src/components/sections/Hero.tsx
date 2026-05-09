@@ -92,6 +92,8 @@ const Hero: React.FC = () => {
                 src="/images/hero.jpg"
                 alt="PAMA Studio hero"
                 fill
+                priority
+                sizes="(max-width: 1024px) 100vw, 40vw"
                 unoptimized
                 className="object-cover"
               />
