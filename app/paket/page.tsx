@@ -4,7 +4,7 @@ import { Camera, Sparkles, Users, ArrowLeft, ChevronLeft, ChevronRight } from "l
 import Navbar from "@/components/layout/Navbar";
 import Footer from "@/components/layout/Footer";
 import PackageCard from "@/components/paket/PackageCard";
-import { createSupabaseServerClient } from "@/lib/supabase/server";
+import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 import {  groupPackagesToCards } from "@/lib/packageCardAdapter";
 
 type FilterKey =

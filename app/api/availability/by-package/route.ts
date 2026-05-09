@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { createSupabaseServerClient } from "@/lib/supabase/server"; // sesuaikan path kamu
+import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 
 // Jam operasional studio
 const OPEN_HOUR = 9;

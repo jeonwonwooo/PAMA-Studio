@@ -1,4 +1,5 @@
 import { createBrowserClient } from "@supabase/ssr";
+// Forced refresh for casing consistency
 
 export function createSupabaseBrowserClient() {
   return createBrowserClient(

@@ -11,9 +11,9 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { createSupabaseBrowserClient } from "@/lib/supabase/browse";
+import { createSupabaseBrowserClient } from "@/lib/supabase/supabase-browser";
 import CheckoutAuthModal from "@/components/ui/AuthModal";
-import SuccessModal from "@/components/ui/SuccessModal";
+import SuccessModal from "@/components/ui/successModal";
 
 // --- Types ---
 type PackageRow = {

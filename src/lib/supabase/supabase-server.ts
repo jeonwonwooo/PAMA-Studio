@@ -1,4 +1,5 @@
 import { cookies } from "next/headers";
+// Forced refresh for casing consistency
 import { createServerClient } from "@supabase/ssr";
 
 export async function createSupabaseServerClient() {

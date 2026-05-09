@@ -5,7 +5,7 @@ import Image from "next/image";
 import { Menu, X, ShoppingBag, ArrowUpRight, User, LogOut, LayoutDashboard } from "lucide-react";
 import AuthModal from "@/components/ui/AuthModal";
 import { useRouter } from "next/navigation";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browse";
+import { createSupabaseBrowserClient } from "@/lib/supabase/supabase-browser";
 
 const Navbar: React.FC = () => {
   const [scrolled, setScrolled] = useState(false);

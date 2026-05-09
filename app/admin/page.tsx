@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { createSupabaseBrowserClient } from "@/lib/supabase/browse";
+import { createSupabaseBrowserClient } from "@/lib/supabase/supabase-browser";
 import {
   Users, ShoppingBag, Clock, CheckCircle, TrendingUp,
   ArrowUpRight, Loader2, AlertCircle, ChevronLeft, ChevronRight,
