@@ -6,6 +6,7 @@ import {
   Users, ShoppingBag, Clock, CheckCircle, TrendingUp,
   ArrowUpRight, Loader2, AlertCircle, ChevronLeft, ChevronRight,
 } from "lucide-react";
+import AIInsightWidget from "../../src/components/admin/AIInsightWidget";
 
 function formatIDR(n: number) {
   return "Rp " + new Intl.NumberFormat("id-ID").format(n);
@@ -153,6 +154,9 @@ export default function AdminPage() {
           </div>
         ))}
       </div>
+
+      {/* AI Insight Section */}
+      <AIInsightWidget />
 
       {/* Bottom Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">

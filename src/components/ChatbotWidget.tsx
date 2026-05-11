@@ -94,7 +94,7 @@ const ChatbotWidget = () => {
                 },
                 footer: {
                   textColor: "#3a1a1a",
-                  text: "Official PAMA Studio Assistant",
+                  text: "PAMA Studio Assistant by",
                 },
                 starterPrompts: [
                   "📷 Lihat Pilihan Paket",
@@ -126,7 +126,7 @@ const ChatbotWidget = () => {
       >
         <MessageCircle size={32} />
         <span className="absolute -left-32 top-1/2 -translate-y-1/2 rounded-lg bg-[#8B1A1A] px-3 py-1.5 text-xs font-semibold text-white opacity-0 transition-opacity group-hover:opacity-100 sm:block hidden">
-          Chat Admin (Fallback)
+          Chat Admin
         </span>
       </a>
     )}
