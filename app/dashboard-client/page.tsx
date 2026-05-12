@@ -1,17 +1,16 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { createSupabaseBrowserClient } from "../../src/lib/supabase/supabase-browser";
-import { 
-  Package, 
-  Clock, 
-  CheckCircle2, 
-  ChevronRight, 
+import {
+  Package,
+  Clock,
+  CheckCircle2,
+  ChevronRight,
   LayoutDashboard,
   AlertCircle,
   MessageCircle,
   X,
-  Receipt
+  Receipt,
 } from "lucide-react";
 import Image from "next/image";
 
@@ -99,23 +98,29 @@ export default function ClientDashboard() {
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const supabase = React.useMemo(() => createSupabaseBrowserClient(), []);
 
   useEffect(() => {
     const fetchOrders = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data } = await supabase
-          .from("orders")
-          .select("*, packages(title)")
-          .eq("user_id", session.user.id)
-          .order("created_at", { ascending: false });
-        setOrders(data || []);
+      try {
+        const res = await fetch("/api/orders/my-orders");
+        if (!res.ok) {
+          setOrders([]);
+          setLoading(false);
+          return;
+        }
+
+        const data = await res.json();
+        setOrders(data.orders || []);
+      } catch (error) {
+        console.error("Dashboard fetch orders error:", error);
+        setOrders([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
+
     fetchOrders();
-  }, [supabase]);
+  }, []);
 
   const openDetail = (order: any) => {
     setSelectedOrder(order);

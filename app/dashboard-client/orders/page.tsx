@@ -1,36 +1,40 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { createSupabaseBrowserClient } from "../../../src/lib/supabase/supabase-browser";
-import { 
-  ShoppingBag, 
-  Search, 
-  Filter, 
-  Calendar, 
+import {
+  ShoppingBag,
+  Search,
+  Filter,
+  Calendar,
   ChevronRight,
-  MoreHorizontal
+  MoreHorizontal,
 } from "lucide-react";
 
 export default function OrdersPage() {
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
-  const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
     const fetchOrders = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        const { data } = await supabase
-          .from("orders")
-          .select("*, packages(title)")
-          .eq("user_id", session.user.id)
-          .order("created_at", { ascending: false });
-        setOrders(data || []);
+      try {
+        const res = await fetch("/api/orders/my-orders");
+        if (!res.ok) {
+          setOrders([]);
+          setLoading(false);
+          return;
+        }
+        const data = await res.json();
+        setOrders(data.orders || []);
+      } catch (error) {
+        console.error("Orders page fetch error:", error);
+        setOrders([]);
+      } finally {
+        setLoading(false);
       }
-      setLoading(false);
     };
+
     fetchOrders();
-  }, [supabase]);
+  }, []);
 
   return (
     <div className="max-w-5xl mx-auto space-y-8" style={{ fontFamily: "var(--font-inter-tight)" }}>

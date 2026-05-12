@@ -1,10 +1,10 @@
 "use client";
 // Touch file to resolve casing warning
-import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useState, useMemo } from "react";
 import Image from "next/image";
 import { X, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
-import { createSupabaseBrowserClient } from "../../lib/supabase/supabase-browser";
 import { useRouter } from "next/navigation";
+import { createSupabaseBrowserClient } from "@/lib/supabase/supabase-browser";
 
 type Mode = "login" | "register";
 
@@ -45,55 +45,37 @@ export default function AuthModal({ isOpen, onClose, title, subtitle }: { isOpen
   const handleRegister = async () => {
     const email = getCleanEmail();
 
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password: form.password,
+    const res = await fetch("/api/auth/register", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ name: form.name.trim(), email, password: form.password }),
     });
 
-    if (error) {
-      // handle duplicate email (fix dari kasus kamu)
-      if (error.message.includes("duplicate")) {
-        throw new Error("Email sudah terdaftar. Silakan login.");
-      }
-      throw error;
-    }
-
-    if (data.user) {
-      await supabase.from("profiles").insert({
-        id: data.user.id,
-        full_name: form.name.trim(),
-        email,
-        role: "client",
-      });
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || "Registrasi gagal.");
     }
 
     setMode("login");
-    throw new Error("Registrasi berhasil! Silakan login.");
+    setError(data.message || "Registrasi berhasil! Silakan login.");
   };
 
   // 🔥 HANDLE LOGIN
   const handleLogin = async () => {
     const email = getCleanEmail();
 
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password: form.password,
+    const res = await fetch("/api/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ email, password: form.password }),
     });
 
-    if (error) {
-      if (error.message.includes("Invalid login credentials")) {
-        throw new Error("Email atau password salah.");
-      }
-      throw error;
+    const data = await res.json();
+    if (!res.ok) {
+      throw new Error(data.message || "Email atau password salah.");
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", data.user.id)
-      .single();
-
-    const role = profile?.role || "client";
+    const role = data.profile?.role || "client";
 
     onClose();
     router.push(role === "admin" ? "/admin" : "/paket");

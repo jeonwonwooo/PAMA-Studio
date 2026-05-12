@@ -1,45 +1,71 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 
-// ── CONTOH ENDPOINT REGISTER ──
-// Ganti logika di bawah dengan koneksi ke database Anda (Prisma, Supabase, dsb.)
 export async function POST(request: NextRequest) {
   try {
     const { name, email, password } = await request.json();
+    const normalizedName = String(name ?? "").trim();
+    const normalizedEmail = String(email ?? "").trim().toLowerCase();
+    const normalizedPassword = String(password ?? "");
 
-    // Validasi input
-    if (!name || !email || !password) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!normalizedName || normalizedName.length < 2) {
       return NextResponse.json(
-        { message: "Semua field wajib diisi" },
+        { message: "Nama minimal 2 karakter" },
         { status: 400 }
       );
     }
 
-    if (password.length < 6) {
+    if (!normalizedEmail || !emailRegex.test(normalizedEmail)) {
+      return NextResponse.json(
+        { message: "Format email tidak valid" },
+        { status: 400 }
+      );
+    }
+
+    if (!normalizedPassword || normalizedPassword.length < 6) {
       return NextResponse.json(
         { message: "Password minimal 6 karakter" },
         { status: 400 }
       );
     }
 
-    // ─── GANTI BLOK INI DENGAN LOGIKA AUTH ANDA ───
-    // Contoh: cek apakah email sudah terdaftar, hash password, simpan ke DB
-    //
-    // const existing = await prisma.user.findUnique({ where: { email } });
-    // if (existing) {
-    //   return NextResponse.json({ message: "Email sudah terdaftar" }, { status: 409 });
-    // }
-    // const passwordHash = await bcrypt.hash(password, 12);
-    // const user = await prisma.user.create({
-    //   data: { name, email, passwordHash },
-    // });
-    // ───────────────────────────────────────────────
-
-    // Placeholder response — hapus setelah backend ready
-    return NextResponse.json({
-      message: "Registrasi berhasil",
-      user: { name, email },
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.signUp({
+      email: normalizedEmail,
+      password: normalizedPassword,
+      options: {
+        data: {
+          full_name: normalizedName,
+        },
+      },
     });
-  } catch {
+
+    if (error) {
+      return NextResponse.json(
+        { message: error.message || "Registrasi gagal" },
+        { status: error.status || 400 }
+      );
+    }
+
+    if (data.user?.id) {
+      const { error: profileError } = await supabase.from("profiles").insert({
+        id: data.user.id,
+        full_name: normalizedName,
+        email: normalizedEmail,
+        role: "client",
+      });
+
+      if (profileError) {
+        console.error("Failed to create profile after register:", profileError);
+      }
+    }
+
+    return NextResponse.json({
+      message: "Registrasi berhasil. Silakan login.",
+    });
+  } catch (error) {
+    console.error("Register error:", error);
     return NextResponse.json(
       { message: "Terjadi kesalahan server" },
       { status: 500 }

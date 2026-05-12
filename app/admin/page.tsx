@@ -1,12 +1,12 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { createSupabaseBrowserClient } from "../../src/lib/supabase/supabase-browser";
 import {
   Users, ShoppingBag, Clock, CheckCircle, TrendingUp,
   ArrowUpRight, Loader2, AlertCircle, ChevronLeft, ChevronRight,
 } from "lucide-react";
 import AIInsightWidget from "../../src/components/admin/AIInsightWidget";
+import { useRouter } from "next/navigation";
 
 function formatIDR(n: number) {
   return "Rp " + new Intl.NumberFormat("id-ID").format(n);
@@ -70,53 +70,75 @@ function MiniCalendar() {
 }
 
 export default function AdminPage() {
-  const supabase = createSupabaseBrowserClient();
+  const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [adminName, setAdminName] = useState("Admin");
   const [stats, setStats] = useState({ totalUsers: 0, totalOrders: 0, pendingOrders: 0, doneOrders: 0 });
   const [recentOrders, setRecentOrders] = useState<any[]>([]);
-  const [packageStats, setPackageStats] = useState<{ title: string; count: number; total: number }[]>([]);
+  const [packageStats, setPackageStats] = useState<{ id: string; title: string; count: number; total: number }[]>([]);
+  const [isAdmin, setIsAdmin] = useState(false);
 
   useEffect(() => {
+    const checkAdmin = async () => {
+      try {
+        const res = await fetch("/api/profile");
+        if (!res.ok) {
+          router.push("/");
+          return;
+        }
+        const data = await res.json();
+        if (data.profile?.role !== "admin") {
+          router.push("/");
+          return;
+        }
+        setIsAdmin(true);
+        setAdminName(data.profile?.full_name || "Admin");
+        fetchData();
+      } catch (error) {
+        console.error("Admin check error:", error);
+        router.push("/");
+      }
+    };
+
     const fetchData = async () => {
       setLoading(true);
+      try {
+        const [statsRes, ordersRes] = await Promise.all([
+          fetch("/api/admin/stats"),
+          fetch("/api/admin/orders"),
+        ]);
 
-      const { data: { user } } = await supabase.auth.getUser();
-      if (user) {
-        const { data: profile } = await supabase.from("profiles").select("full_name").eq("id", user.id).single();
-        if (profile?.full_name) setAdminName(profile.full_name);
+        if (!statsRes.ok || !ordersRes.ok) {
+          console.error("Failed to fetch admin data");
+          return;
+        }
+
+        const statsData = await statsRes.json();
+        const ordersData = await ordersRes.json();
+
+        setStats(statsData.stats);
+        setPackageStats(statsData.packageStats);
+        setRecentOrders(ordersData.orders);
+      } catch (error) {
+        console.error("Fetch data error:", error);
+      } finally {
+        setLoading(false);
       }
-
-      const { count: userCount } = await supabase.from("profiles").select("id", { count: "exact", head: true });
-      const { data: allOrders } = await supabase.from("orders").select("id, status, total_price_idr, package_id");
-      const totalOrders = allOrders?.length ?? 0;
-      const pendingOrders = allOrders?.filter(o => ["pending","awaiting_payment"].includes(o.status)).length ?? 0;
-      const doneOrders = allOrders?.filter(o => o.status === "done").length ?? 0;
-      setStats({ totalUsers: userCount ?? 0, totalOrders, pendingOrders, doneOrders });
-
-      // Recent orders
-      const { data: recent } = await supabase
-        .from("orders")
-        .select("id, status, total_price_idr, created_at, scheduled_at, packages(title), profiles(full_name)")
-        .order("created_at", { ascending: false })
-        .limit(5);
-      setRecentOrders((recent as any[]) ?? []);
-
-      // Package stats
-      const { data: pkgs } = await supabase.from("packages").select("id, title");
-      if (pkgs && allOrders) {
-        const stats = pkgs.map(pkg => ({
-          title: pkg.title,
-          count: allOrders.filter(o => o.package_id === pkg.id).length,
-          total: totalOrders,
-        })).filter(p => p.count > 0).sort((a, b) => b.count - a.count).slice(0, 4);
-        setPackageStats(stats);
-      }
-
-      setLoading(false);
     };
-    fetchData();
-  }, []);
+
+    checkAdmin();
+  }, [router]);
+
+  if (!isAdmin) {
+    return (
+      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+        <div className="text-center">
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
+          <p className="text-gray-600">Memverifikasi akses admin...</p>
+        </div>
+      </div>
+    );
+  }
 
   const todayStr = new Date().toLocaleDateString("id-ID", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
 
@@ -217,7 +239,7 @@ export default function AdminPage() {
                 {packageStats.map((pkg) => {
                   const pct = pkg.total > 0 ? Math.round((pkg.count / pkg.total) * 100) : 0;
                   return (
-                    <div key={pkg.title}>
+                    <div key={pkg.id}>
                       <div className="flex justify-between text-xs mb-1">
                         <span className="font-medium text-gray-700 truncate">{pkg.title}</span>
                         <span className="text-gray-400 ml-2">{pkg.count}x</span>
