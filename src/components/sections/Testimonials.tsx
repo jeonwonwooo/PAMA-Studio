@@ -1,44 +1,73 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Image from "next/image";
-import { Star, Quote, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight, ExternalLink } from "lucide-react";
+
+interface Testimonial {
+  name: string;
+  role: string;
+  avatar_url: string | null;
+  text: string;
+  rating: number;
+}
+
+const GOOGLE_PLACE_ID = "ChIJtxOArCHh1y0RBRJE2se0bjU";
+const GOOGLE_REVIEW_URL = `https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`;
+
+const defaultTestimonials: Testimonial[] = [
+  {
+    name: "N. Maula",
+    role: "Local Guide",
+    avatar_url: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
+    text: "Bagus banget hasil fotonya jernih, murah, aksesoris dan propertinya sangat banyak untuk pendukung foto, tempatnya nyaman, bersih, sejuk, adminnya informatif, parkiran luas, lokasinya juga sangat strategis di pusat kotaa. bakal balik kesini lagi kalau foto. thx",
+    rating: 5,
+  },
+  {
+    name: "Z. Naura",
+    role: "Local Guide",
+    avatar_url: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
+    text: "kalian kalo bingung foto self studio dimana atau mau sama temn temn keluarga dan pasangan kalian? ini seriuss rekomen bangett karnaa dengan harganya ramah dikantong, tempatnya bagus nyaman dan kameranya hd cerah juga trud pelayanannya ramah dan baik banget, kakanya gercep semua dan ditempatnya juga jualin berbagai jajanan sama minuman enak banget and worth to buyy gaiss, kalo ada bintang 10 aku kasi 10 bintang buat pama studio🤩🤩🤩🤩",
+    rating: 5,
+  },
+  {
+    name: "C. Sherlyna",
+    role: "Local Guide",
+    avatar_url: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop",
+    text: "Keren bgt , hospitality abang² nya juga ramah . Ada Snack sama minuman juga . Buat yang ga pede foto ada musik dlm studionya biar bisa lebih rileks . Ada tempat nongkinya jg adem , bisa smooking juga . Ohyaa parkirannya luas yaa barangkali mau bawa mbl / truk mah masuk aja",
+    rating: 5,
+  },
+];
 
 const Testimonials: React.FC = () => {
-  const GOOGLE_PLACE_ID = "ChIJtxOArCHh1y0RBRJE2se0bjU";
-  const GOOGLE_REVIEW_URL = `https://search.google.com/local/writereview?placeid=${GOOGLE_PLACE_ID}`;
-
-  const testimonials = [
-    {
-      name: "N. Maula",
-      role: "Local Guide",
-      img: "https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=200&h=200&fit=crop",
-      text: "Bagus banget hasil fotonya jernih, murah, aksesoris dan propertinya sangat banyak untuk pendukung foto, tempatnya nyaman, bersih, sejuk, adminnya informatif, parkiran luas, lokasinya juga sangat strategis di pusat kotaa. bakal balik kesini lagi kalau foto. thx",
-      rating: 5,
-    },
-    {
-      name: "Z. Naura",
-      role: "Local Guide",
-      img: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=200&h=200&fit=crop",
-      text: "kalian kalo bingung foto self studio dimana atau mau sama temn temn keluarga dan pasangan kalian? ini seriuss rekomen bangett karnaa dengan harganya ramah dikantong, tempatnya bagus nyaman dan kameranya hd cerah juga trud pelayanannya ramah dan baik banget, kakanya gercep semua dan ditempatnya juga jualin berbagai jajanan sama minuman enak banget and worth to buyy gaiss, kalo ada bintang 10 aku kasi 10 bintang buat pama studio🤩🤩🤩🤩",
-      rating: 5,
-    },
-    {
-      name: "C. Sherlyna",
-      role: "Local Guide",
-      img: "https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=200&h=200&fit=crop",
-      text: "Keren bgt , hospitality abang² nya juga ramah . Ada Snack sama minuman juga . Buat yang ga pede foto ada musik dlm studionya biar bisa lebih rileks . Ada tempat nongkinya jg adem , bisa smooking juga . Ohyaa parkirannya luas yaa barangkali mau bawa mbl / truk mah masuk aja",
-      rating: 5,
-    }
-  ];
-
+  const [testimonials, setTestimonials] = useState<Testimonial[]>(defaultTestimonials);
+  const [loading, setLoading] = useState(true);
   const [active, setActive] = useState(0);
+
+  useEffect(() => {
+    const fetchTestimonials = async () => {
+      try {
+        const res = await fetch("/api/landing/testimonials");
+        if (res.ok) {
+          const data = await res.json();
+          if (data.testimonials && data.testimonials.length > 0) {
+            setTestimonials(data.testimonials);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to fetch testimonials:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchTestimonials();
+  }, []);
 
   return (
     <section className="relative bg-[#FBF7F1] py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
-          {/* Left Side */}
           <div className="lg:col-span-4">
             <span
               className="text-xs font-semibold uppercase tracking-[0.24em] text-[#8B1A1A]"
@@ -61,7 +90,6 @@ const Testimonials: React.FC = () => {
               kami.
             </p>
 
-            {/* Google Review CTA Button */}
             <div className="mt-8">
               <a
                 href={GOOGLE_REVIEW_URL}
@@ -81,36 +109,44 @@ const Testimonials: React.FC = () => {
 
             <hr className="my-8 border-[#8B1A1A]/10" />
 
-            {/* Featured avatar section */}
-            <div className="flex items-center gap-4">
-              <div className="relative">
-                <div className="absolute inset-0 rounded-full bg-[#8B1A1A]/20 blur-md" />
-                <Image
-                  src={testimonials[active].img}
-                  alt={testimonials[active].name}
-                  width={64}
-                  height={64}
-                  unoptimized
-                  className="relative h-16 w-16 rounded-full border-2 border-white object-cover shadow-lg"
-                />
-              </div>
-              <div>
-                <div
-                  className="text-base font-semibold text-[#1a0505]"
-                  style={{ fontFamily: "Fraunces, serif" }}
-                >
-                  {testimonials[active].name}
+            {testimonials[active] && (
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <div className="absolute inset-0 rounded-full bg-[#8B1A1A]/20 blur-md" />
+                  {testimonials[active].avatar_url ? (
+                    <Image
+                      src={testimonials[active].avatar_url}
+                      alt={testimonials[active].name}
+                      width={64}
+                      height={64}
+                      unoptimized
+                      className="relative h-16 w-16 rounded-full border-2 border-white object-cover shadow-lg"
+                    />
+                  ) : (
+                    <div className="relative h-16 w-16 rounded-full border-2 border-white bg-[#8B1A1A] flex items-center justify-center shadow-lg">
+                      <span className="text-xl font-bold text-white">
+                        {testimonials[active].name.charAt(0)}
+                      </span>
+                    </div>
+                  )}
                 </div>
-                <div
-                  className="text-xs text-[#3a1a1a]/60"
-                  style={{ fontFamily: "Inter Tight, sans-serif" }}
-                >
-                  {testimonials[active].role}
+                <div>
+                  <div
+                    className="text-base font-semibold text-[#1a0505]"
+                    style={{ fontFamily: "Fraunces, serif" }}
+                  >
+                    {testimonials[active].name}
+                  </div>
+                  <div
+                    className="text-xs text-[#3a1a1a]/60"
+                    style={{ fontFamily: "Inter Tight, sans-serif" }}
+                  >
+                    {testimonials[active].role}
+                  </div>
                 </div>
               </div>
-            </div>
+            )}
 
-            {/* Navigation */}
             <div className="mt-6 flex items-center gap-2">
               <button
                 onClick={() =>
@@ -140,7 +176,6 @@ const Testimonials: React.FC = () => {
             </div>
           </div>
 
-          {/* Right Side - Cards */}
           <div className="lg:col-span-8">
             <div className="space-y-3">
               {testimonials.map((t, i) => (
@@ -155,17 +190,30 @@ const Testimonials: React.FC = () => {
                   ].join(" ")}
                 >
                   <div className="flex items-start gap-4">
-                    <Image
-                      src={t.img}
-                      alt={t.name}
-                      width={48}
-                      height={48}
-                      unoptimized
-                      className={[
-                        "h-12 w-12 shrink-0 rounded-full border-2 object-cover transition",
-                        active === i ? "border-white" : "border-[#8B1A1A]/20",
-                      ].join(" ")}
-                    />
+                    {t.avatar_url ? (
+                      <Image
+                        src={t.avatar_url}
+                        alt={t.name}
+                        width={48}
+                        height={48}
+                        unoptimized
+                        className={[
+                          "h-12 w-12 shrink-0 rounded-full border-2 object-cover transition",
+                          active === i ? "border-white" : "border-[#8B1A1A]/20",
+                        ].join(" ")}
+                      />
+                    ) : (
+                      <div
+                        className={[
+                          "flex h-12 w-12 shrink-0 items-center justify-center rounded-full border-2 text-lg font-bold transition",
+                          active === i
+                            ? "border-white bg-white/20 text-white"
+                            : "border-[#8B1A1A]/20 bg-[#8B1A1A]/10 text-[#8B1A1A]",
+                        ].join(" ")}
+                      >
+                        {t.name.charAt(0)}
+                      </div>
+                    )}
                     <div className="flex-1">
                       <div className="flex items-center justify-between gap-3">
                         <div>
@@ -212,12 +260,6 @@ const Testimonials: React.FC = () => {
                         &ldquo;{t.text}&rdquo;
                       </p>
                     </div>
-                    <Quote
-                      className={[
-                        "h-5 w-5 shrink-0 transition",
-                        active === i ? "text-white/40" : "text-[#8B1A1A]/20",
-                      ].join(" ")}
-                    />
                   </div>
                 </button>
               ))}

@@ -1,26 +1,14 @@
 import { NextResponse } from "next/server";
+import { verifyAdmin } from "@/lib/auth-helpers";
 import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 
 export async function GET() {
+  const check = await verifyAdmin();
+  if (!check.success) {
+    return NextResponse.json({ message: check.error!.message }, { status: check.error!.status });
+  }
+
   const supabase = await createSupabaseServerClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  // Check if user is admin
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError || profile?.role !== "admin") {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  // Get notifications data
   const since24h = new Date(Date.now() - 24 * 3600000).toISOString();
   const since48h = new Date(Date.now() - 48 * 3600000).toISOString();
 

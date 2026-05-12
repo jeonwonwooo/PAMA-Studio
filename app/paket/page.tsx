@@ -237,7 +237,7 @@ export default async function PaketPage({
             Tim kami siap membantu kamu memilih paket yang paling sesuai.
           </p>
           <a
-            href="https://wa.me/6282331555431"
+            href={`https://wa.me/${process.env.NEXT_PUBLIC_WA_ADMIN || "6282331555431"}?text=${encodeURIComponent("Halo PAMA Studio! Saya ingin konsultasi paket.")}`}
             target="_blank"
             rel="noreferrer"
             className="mt-8 inline-flex items-center gap-2.5 rounded-full bg-white px-8 py-4 text-sm font-semibold text-[#8B1A1A] transition hover:bg-[#FFD7A8]"

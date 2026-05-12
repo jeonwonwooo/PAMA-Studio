@@ -1,7 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
+import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
+  const ip = getClientIp(request);
+  const { success, remaining, resetAt } = rateLimit(ip);
+  const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
+
+  if (!success) {
+    return NextResponse.json(
+      { message: "Terlalu banyak percobaan login. Coba lagi nanti." },
+      { status: 429, headers: { "Retry-After": String(retryAfter) } }
+    );
+  }
+
   try {
     const { email, password } = await request.json();
     const normalizedEmail = String(email ?? "").trim().toLowerCase();

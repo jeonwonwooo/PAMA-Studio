@@ -17,9 +17,13 @@ export async function POST(request: Request) {
 
     // 2. Parsing Body — slot_id tidak dikirim dari frontend
     const body = await request.json().catch(() => ({}));
-    const { packageId, date, time, notes, addons = [] } = body;
+const { packageId, date, time, notes, addons = [] } = body;
 
-    if (!packageId) {
+  const sanitizedNotes = notes
+    ? notes.replace(/<[^>]*>/g, "").trim().slice(0, 500)
+    : null;
+
+  if (!packageId) {
       return NextResponse.json({ message: "packageId required" }, { status: 400 });
     }
 
@@ -62,7 +66,7 @@ export async function POST(request: Request) {
         user_id: user.id,
         package_id: packageId,
         status: "pending",
-        notes: notes ?? null,
+        notes: sanitizedNotes,
         base_price_idr: pkg.base_price_idr,
         addons_price_idr: 0,
         total_price_idr: pkg.base_price_idr,

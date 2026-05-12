@@ -7,6 +7,7 @@ export interface Profile {
   full_name: string;
   email: string;
   role: "client" | "admin";
+  phone?: string;
 }
 
 export interface User {
@@ -34,7 +35,7 @@ export function useAuth() {
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
       .from("profiles")
-      .select("full_name, email, role")
+      .select("full_name, email, role, phone")
       .eq("id", userId)
       .single();
     return data as Profile | null;

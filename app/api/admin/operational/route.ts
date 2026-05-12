@@ -1,27 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
+import { verifyAdmin } from "@/lib/auth-helpers";
 
-export async function GET() {
+export async function GET(request: NextRequest) {
+  const check = await verifyAdmin();
+  if (!check.success) {
+    return NextResponse.json({ message: check.error!.message }, { status: check.error!.status });
+  }
+
   const supabase = await createSupabaseServerClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
+  const url = new URL(request.url);
+  const page = Math.max(1, parseInt(url.searchParams.get("page") ?? "1"));
+  const limit = Math.min(50, Math.max(1, parseInt(url.searchParams.get("limit") ?? "20")));
+  const offset = (page - 1) * limit;
 
-  if (authError || !user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  // Check if user is admin
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError || profile?.role !== "admin") {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
-  // Get operational data
-  const { data: orders, error: ordersError } = await supabase
+  const { data: orders, error: ordersError, count } = await supabase
     .from("orders")
     .select(`
       id,
@@ -31,40 +24,42 @@ export async function GET() {
       total_price_idr,
       packages(title),
       profiles(full_name, phone)
-    `)
+    `, { count: "exact" })
     .order("created_at", { ascending: false })
-    .limit(50);
+    .range(offset, offset + limit - 1);
 
   if (ordersError) {
     return NextResponse.json({ message: "Failed to fetch orders" }, { status: 500 });
   }
 
-  return NextResponse.json({ orders: orders || [] });
+  return NextResponse.json({
+    orders: orders || [],
+    pagination: {
+      page,
+      limit,
+      total: count ?? 0,
+      totalPages: Math.ceil((count ?? 0) / limit),
+    }
+  });
 }
 
-export async function PATCH(request: Request) {
+export async function PATCH(request: NextRequest) {
+  const check = await verifyAdmin();
+  if (!check.success) {
+    return NextResponse.json({ message: check.error!.message }, { status: check.error!.status });
+  }
+
   const supabase = await createSupabaseServerClient();
-  const { data: { user }, error: authError } = await supabase.auth.getUser();
-
-  if (authError || !user) {
-    return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
-  }
-
-  // Check if user is admin
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("role")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError || profile?.role !== "admin") {
-    return NextResponse.json({ message: "Forbidden" }, { status: 403 });
-  }
-
   const { orderId, status } = await request.json();
+
+  const VALID_STATUSES = ["pending", "awaiting_payment", "paid", "scheduled", "in_progress", "done", "cancelled"];
 
   if (!orderId || !status) {
     return NextResponse.json({ message: "Missing orderId or status" }, { status: 400 });
+  }
+
+  if (!VALID_STATUSES.includes(status)) {
+    return NextResponse.json({ message: `Invalid status. Allowed: ${VALID_STATUSES.join(", ")}` }, { status: 400 });
   }
 
   const { error } = await supabase

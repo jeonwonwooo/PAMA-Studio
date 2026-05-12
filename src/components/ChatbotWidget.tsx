@@ -11,8 +11,9 @@ const ChatbotWidget = () => {
   const FLOWISE_CHATFLOW_ID = process.env.NEXT_PUBLIC_FLOWISE_CHATFLOW_ID;
   const FLOWISE_API_HOST = process.env.NEXT_PUBLIC_FLOWISE_API_HOST;
 
+  const WA_ADMIN = process.env.NEXT_PUBLIC_WA_ADMIN || "6282331555431";
   // Don't show chatbot on admin pages
-  if (pathname?.startsWith('/admin')) {
+  if (pathname?.startsWith('/admin') || pathname?.startsWith('/checkout')) {
     return null;
   }
 
@@ -118,7 +119,7 @@ const ChatbotWidget = () => {
     />
     {isError && (
       <a
-        href="https://wa.me/6282331555431"
+        href={`https://wa.me/${WA_ADMIN}?text=${encodeURIComponent("Halo, saya butuh bantuan dari PAMA Studio.")}`}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-[25px] right-[25px] z-[9999] flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-all hover:scale-110 active:scale-95"

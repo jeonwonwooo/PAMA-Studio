@@ -1,8 +1,15 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useInView } from "../../hooks/useInView";
 import { useCountUp } from "../../hooks/useCountUp";
+
+interface StatsData {
+  totalOrders: number;
+  completedOrders: number;
+  totalPackages: number;
+  totalClients: number;
+}
 
 interface StatItemProps {
   end: number;
@@ -47,17 +54,40 @@ const StatItem: React.FC<StatItemProps> = ({ end, suffix, label, inView, hasBord
 
 const Stats: React.FC = () => {
   const { ref, inView } = useInView({ threshold: 0.3 });
+  const [statsData, setStatsData] = useState<StatsData | null>(null);
 
-  const stats = [
-    { end: 500, suffix: "+", label: "Sesi Foto" },
-    { end: 500, suffix: "K+", label: "Frame Diabadikan" },
-    { end: 98, suffix: "%", label: "Tingkat Kepuasan" },
-    { end: 1000, suffix: "+", label: "Klien Bahagia" },
-  ];
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        const res = await fetch("/api/landing/stats");
+        if (res.ok) {
+          const data = await res.json();
+          setStatsData(data);
+        }
+      } catch (error) {
+        console.error("Failed to fetch stats:", error);
+      }
+    };
+
+    fetchStats();
+  }, []);
+
+  const stats = statsData
+    ? [
+        { end: statsData.totalOrders || 500, suffix: "+", label: "Sesi Foto" },
+        { end: Math.round((statsData.completedOrders || 500) * 1.5), suffix: "K+", label: "Frame Diabadikan" },
+        { end: 98, suffix: "%", label: "Tingkat Kepuasan" },
+        { end: statsData.totalClients || 1000, suffix: "+", label: "Klien Bahagia" },
+      ]
+    : [
+        { end: 500, suffix: "+", label: "Sesi Foto" },
+        { end: 500, suffix: "K+", label: "Frame Diabadikan" },
+        { end: 98, suffix: "%", label: "Tingkat Kepuasan" },
+        { end: 1000, suffix: "+", label: "Klien Bahagia" },
+      ];
 
   return (
     <section className="relative overflow-hidden bg-gradient-to-br from-[#8B1A1A] via-[#761414] to-[#5C0E0E] py-14">
-      {/* Decorative pattern */}
       <div
         className="absolute inset-0 opacity-[0.07]"
         style={{

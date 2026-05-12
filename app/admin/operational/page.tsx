@@ -3,8 +3,11 @@
 import React, { useEffect, useState, useCallback, useRef } from "react";
 import {
   RefreshCw, Download, ShoppingBag, Clock, ChevronDown, Check, Loader2,
+  Calendar, Users, ArrowRight,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { motion } from "framer-motion";
+import Link from "next/link";
 
 function formatTime(iso: string) {
   return new Date(iso).toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" });
@@ -23,7 +26,7 @@ const STATUS_COLOR: Record<string, string> = {
   scheduled: "bg-blue-100 text-blue-700",
   cancelled: "bg-red-100 text-red-600",
   paid: "bg-green-100 text-green-700",
-  done: "bg-gray-100 text-gray-600",
+  done: "bg-green-50 text-green-600",
   in_progress: "bg-cyan-100 text-cyan-700",
   awaiting_payment: "bg-orange-100 text-orange-700",
 };
@@ -33,7 +36,7 @@ const STATUS_DOT: Record<string, string> = {
   scheduled: "bg-blue-500",
   cancelled: "bg-red-500",
   paid: "bg-green-500",
-  done: "bg-gray-400",
+  done: "bg-green-400",
   in_progress: "bg-cyan-500",
   awaiting_payment: "bg-orange-400",
 };
@@ -107,19 +110,19 @@ function StatusDropdown({ orderId, current, onUpdate }: {
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
           <div
-            className="fixed w-44 bg-white rounded-xl shadow-xl border border-gray-100 z-50"
+            className="fixed w-44 bg-white rounded-2xl shadow-xl border border-[#8B1A1A]/10 z-50 overflow-hidden"
             style={{ top: pos.top, left: pos.left }}
           >
             {STATUS_OPTIONS.map(opt => (
               <button
                 key={opt.value}
                 onClick={() => handleSelect(opt.value)}
-                className={`w-full flex items-center gap-2 px-4 py-2.5 text-xs font-semibold hover:bg-gray-50 transition
-                  ${current === opt.value ? "text-red-600" : "text-gray-700"}`}
+                className={`w-full flex items-center gap-2 px-4 py-3 text-sm font-semibold hover:bg-[#FBF7F1] transition
+                  ${current === opt.value ? "text-[#8B1A1A]" : "text-[#3a1a1a]"}`}
               >
                 <span className={`w-2 h-2 rounded-full ${STATUS_DOT[opt.value] ?? "bg-gray-400"}`} />
                 {opt.label}
-                {current === opt.value && <Check size={12} className="ml-auto text-red-600" />}
+                {current === opt.value && <Check size={14} className="ml-auto text-[#8B1A1A]" />}
               </button>
             ))}
           </div>
@@ -138,11 +141,13 @@ export default function OperationalPage() {
   const [weekStats, setWeekStats] = useState({ thisWeek: 0, lastWeek: 0 });
   const [pendingCount, setPendingCount] = useState(0);
   const [longestPending, setLongestPending] = useState<string | null>(null);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 1 });
 
-  const fetchData = async () => {
+  const fetchData = async (page = 1) => {
     setLoading(true);
     try {
-      const res = await fetch("/api/admin/operational");
+      const res = await fetch(`/api/admin/operational?page=${page}&limit=20`);
       if (!res.ok) {
         console.error("Failed to fetch operational data");
         return;
@@ -150,6 +155,7 @@ export default function OperationalPage() {
       const data = await res.json();
 
       setOrders(data.orders);
+      setPagination(data.pagination);
 
       const today = new Date().toISOString().slice(0, 10);
       const todayData = data.orders.filter((o: any) =>
@@ -157,7 +163,6 @@ export default function OperationalPage() {
       );
       setTodayOrders(todayData);
 
-      // Calculate week stats (simplified)
       const now = new Date();
       const weekAgo = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
       const twoWeeksAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
@@ -243,7 +248,7 @@ export default function OperationalPage() {
         o.packages?.title ?? "-",
         STATUS_LABEL[o.status] ?? o.status,
         o.scheduled_at ? new Date(o.scheduled_at).toLocaleString("id-ID") : "-",
-        o.total_price_idr,
+        new Intl.NumberFormat("id-ID").format(o.total_price_idr),
       ]);
     });
     const csv = rows.map(r => r.join(",")).join("\n");
@@ -256,10 +261,10 @@ export default function OperationalPage() {
 
   if (!isAdmin) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
+      <div className="min-h-screen bg-[#FBF7F1] flex items-center justify-center">
         <div className="text-center">
-          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4" />
-          <p className="text-gray-600">Memverifikasi akses admin...</p>
+          <Loader2 className="h-8 w-8 animate-spin mx-auto mb-4 text-[#8B1A1A]" />
+          <p className="text-[#3a1a1a]/60 font-medium">Memverifikasi akses admin...</p>
         </div>
       </div>
     );
@@ -267,168 +272,218 @@ export default function OperationalPage() {
 
   if (loading) return (
     <div className="flex items-center justify-center h-64">
-      <Loader2 className="animate-spin text-red-600" size={32} />
+      <Loader2 className="animate-spin text-[#8B1A1A]" size={32} />
     </div>
   );
 
   return (
-    <div className="space-y-6">
-      {/* Header */}
+    <div className="space-y-8">
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <p className="text-red-600 text-sm font-semibold">Sistem Operasional</p>
-          <h1 className="text-2xl font-bold text-gray-800">Operational Health</h1>
+          <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-[#8B1A1A]">Sistem Operasional</span>
+          <h1 className="text-2xl md:text-3xl font-serif text-[#1a0505] mt-1" style={{ fontFamily: "Fraunces, serif" }}>
+            Operational Health
+          </h1>
+          <p className="text-sm text-[#3a1a1a]/50 mt-1">{todayStr}</p>
         </div>
         <div className="flex items-center gap-3">
-          <button onClick={fetchData} className="flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 bg-white text-sm font-semibold text-gray-700 hover:bg-gray-50 transition">
-            <RefreshCw size={15} /> Refresh Data
+          <button onClick={() => fetchData(currentPage)} className="flex items-center gap-2 px-4 py-2.5 rounded-full border border-[#8B1A1A]/20 bg-white text-sm font-semibold text-[#8B1A1A] hover:bg-[#8B1A1A]/5 transition-all">
+            <RefreshCw size={15} /> Refresh
           </button>
-          <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-[#8B1A1A] text-white text-sm font-semibold hover:bg-[#6B1212] transition">
-            <Download size={15} /> Export Data
+          <button onClick={exportCSV} className="flex items-center gap-2 px-4 py-2.5 rounded-full bg-[#8B1A1A] text-white text-sm font-semibold hover:bg-[#6B1212] transition-all">
+            <Download size={15} /> Export
           </button>
         </div>
       </div>
 
-      {/* Top Stats */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-        {/* Weekly */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Total Booking Minggu Ini</p>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 md:gap-6">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          className="bg-white rounded-3xl border border-[#8B1A1A]/10 p-6 shadow-sm"
+        >
+          <p className="text-xs font-bold uppercase tracking-widest text-[#3a1a1a]/40 mb-3">Total Booking Minggu Ini</p>
           <div className="flex items-baseline gap-2 mb-4">
-            <span className="text-4xl font-black text-gray-800">{pct >= 0 ? "+" : ""}{pct}%</span>
-            <span className="text-xs text-gray-400">Dari Minggu Lalu</span>
+            <span className="text-4xl font-black text-[#1a0505]">{pct >= 0 ? "+" : ""}{pct}%</span>
+            <span className="text-xs text-[#3a1a1a]/50">dari Minggu Lalu</span>
           </div>
-          <div className="space-y-2">
-            <div className="flex items-center justify-between text-xs text-gray-500">
+          <div className="space-y-3">
+            <div className="flex items-center justify-between text-xs text-[#3a1a1a]/60">
               <span>Minggu Lalu</span>
-              <span className="text-red-500 font-semibold">{weekStats.lastWeek} booking</span>
+              <span className="font-semibold text-[#8B1A1A]">{weekStats.lastWeek} booking</span>
             </div>
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-red-400 rounded-full" style={{ width: `${Math.min((weekStats.lastWeek / Math.max(weekStats.thisWeek, weekStats.lastWeek, 1)) * 100, 100)}%` }} />
+            <div className="h-2 bg-[#8B1A1A]/5 rounded-full overflow-hidden">
+              <div className="h-full bg-[#8B1A1A]/40 rounded-full" style={{ width: `${Math.min((weekStats.lastWeek / Math.max(weekStats.thisWeek, weekStats.lastWeek, 1)) * 100, 100)}%` }} />
             </div>
-            <div className="flex items-center justify-between text-xs text-gray-500">
+            <div className="flex items-center justify-between text-xs text-[#3a1a1a]/60">
               <span>Minggu Ini</span>
-              <span className="text-red-500 font-semibold">{weekStats.thisWeek} booking</span>
+              <span className="font-semibold text-[#8B1A1A]">{weekStats.thisWeek} booking</span>
             </div>
-            <div className="h-2 bg-gray-100 rounded-full overflow-hidden">
-              <div className="h-full bg-red-600 rounded-full" style={{ width: `${Math.min((weekStats.thisWeek / Math.max(weekStats.thisWeek, weekStats.lastWeek, 1)) * 100, 100)}%` }} />
+            <div className="h-2 bg-[#8B1A1A]/5 rounded-full overflow-hidden">
+              <motion.div
+                initial={{ width: 0 }}
+                animate={{ width: `${Math.min((weekStats.thisWeek / Math.max(weekStats.thisWeek, weekStats.lastWeek, 1)) * 100, 100)}%` }}
+                className="h-full bg-[#8B1A1A] rounded-full"
+              />
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Today Booking */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col justify-between">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Booking Hari Ini</p>
-          <div className="flex items-center gap-4 mt-4">
-            <div className="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center">
-              <ShoppingBag size={22} className="text-red-500" />
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.1 }}
+          className="bg-white rounded-3xl border border-[#8B1A1A]/10 p-6 shadow-sm flex flex-col"
+        >
+          <p className="text-xs font-bold uppercase tracking-widest text-[#3a1a1a]/40 mb-4">Booking Hari Ini</p>
+          <div className="flex items-center gap-4 flex-1">
+            <div className="w-12 h-12 rounded-2xl bg-blue-50 flex items-center justify-center">
+              <Calendar size={22} className="text-blue-500" />
             </div>
             <div>
-              <p className="text-3xl font-black text-gray-800">{todayBooking} <span className="text-base font-semibold text-gray-500">Booking</span></p>
-              <p className="text-xs text-gray-400">{inProgressCount} booking berlangsung</p>
+              <p className="text-3xl font-black text-[#1a0505]">{todayBooking} <span className="text-base font-medium text-[#3a1a1a]/50">Booking</span></p>
+              <p className="text-xs text-[#3a1a1a]/50 mt-1">{inProgressCount} booking berlangsung</p>
             </div>
           </div>
-        </div>
+        </motion.div>
 
-        {/* Pending */}
-        <div className="bg-white rounded-2xl border border-gray-100 shadow-sm p-6 flex flex-col justify-between">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest">Booking Pending</p>
-          <div className="flex items-center gap-4 mt-4">
-            <div className="w-12 h-12 rounded-xl bg-amber-50 flex items-center justify-center">
+        <motion.div
+          initial={{ opacity: 0, y: 20 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ delay: 0.2 }}
+          className="bg-white rounded-3xl border border-[#8B1A1A]/10 p-6 shadow-sm flex flex-col"
+        >
+          <p className="text-xs font-bold uppercase tracking-widest text-[#3a1a1a]/40 mb-4">Booking Pending</p>
+          <div className="flex items-center gap-4 flex-1">
+            <div className="w-12 h-12 rounded-2xl bg-amber-50 flex items-center justify-center">
               <Clock size={22} className="text-amber-500" />
             </div>
             <div className="flex-1">
-              <p className="text-3xl font-black text-gray-800">{pendingCount} <span className="text-base font-semibold text-gray-500">Pending</span></p>
-              {longestPending && <p className="text-xs text-gray-400">Terlama: {timeAgo(longestPending)}</p>}
+              <p className="text-3xl font-black text-[#1a0505]">{pendingCount} <span className="text-base font-medium text-[#3a1a1a]/50">Pending</span></p>
+              {longestPending && <p className="text-xs text-[#3a1a1a]/40 mt-1">Terlama: {timeAgo(longestPending)}</p>}
             </div>
           </div>
           {pendingCount > 0 && (
-            <button className="mt-3 self-end px-3 py-1.5 rounded-lg bg-[#8B1A1A] text-white text-xs font-bold hover:bg-[#6B1212] transition">
+            <button className="mt-4 self-start px-4 py-2 rounded-full bg-amber-100 text-amber-700 text-xs font-bold hover:bg-amber-200 transition-all">
               Review Pending
             </button>
           )}
-        </div>
+        </motion.div>
       </div>
 
-      {/* Jadwal Hari Ini */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div className="px-6 py-5 border-b border-gray-100">
-          <h2 className="font-bold text-gray-800 text-lg">Jadwal Hari Ini</h2>
-          <p className="text-sm text-gray-400">{todayStr}</p>
+      <div className="bg-white rounded-3xl border border-[#8B1A1A]/10 shadow-sm overflow-hidden">
+        <div className="px-6 py-5 border-b border-[#8B1A1A]/10">
+          <h2 className="font-bold text-[#1a0505] text-lg">Jadwal Hari Ini</h2>
+          <p className="text-xs text-[#3a1a1a]/50 mt-0.5">{todayStr}</p>
         </div>
         {todayOrders.length === 0 ? (
-          <div className="flex flex-col items-center justify-center py-12 text-gray-400">
-            <Clock size={28} className="mb-2" />
-            <p className="text-sm">Tidak ada jadwal hari ini</p>
+          <div className="flex flex-col items-center justify-center py-16 text-[#3a1a1a]/30">
+            <Clock size={32} className="mb-3" />
+            <p className="text-sm font-medium">Tidak ada jadwal hari ini</p>
+            <Link href="/admin/operational" className="mt-3 text-xs text-[#8B1A1A] font-semibold hover:underline">Lihat semua pesanan</Link>
           </div>
         ) : (
+          <div className="overflow-x-auto">
+            <table className="w-full text-sm">
+              <thead>
+                <tr className="bg-[#FBF7F1] text-[#3a1a1a]/50 text-xs uppercase tracking-wide">
+                  <th className="px-6 py-3 text-left font-bold">Sesi</th>
+                  <th className="px-6 py-3 text-left font-bold">Paket</th>
+                  <th className="px-6 py-3 text-left font-bold">Customer</th>
+                  <th className="px-6 py-3 text-left font-bold">Status</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-[#8B1A1A]/5">
+                {todayOrders.map(order => (
+                  <tr key={order.id} className="hover:bg-[#FBF7F1]/50 transition-colors">
+                    <td className="px-6 py-4 font-medium text-[#1a0505]">
+                      {order.scheduled_at ? formatTime(order.scheduled_at) : "—"}
+                    </td>
+                    <td className="px-6 py-4 text-[#3a1a1a]/70">{(order.packages as any)?.title ?? "-"}</td>
+                    <td className="px-6 py-4 text-[#1a0505]">{(order.profiles as any)?.full_name ?? "-"}</td>
+                    <td className="px-6 py-4">
+                      <StatusDropdown orderId={order.id} current={order.status} onUpdate={handleStatusUpdate} />
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        )}
+      </div>
+
+      <div className="bg-white rounded-3xl border border-[#8B1A1A]/10 shadow-sm overflow-hidden">
+        <div className="flex items-center justify-between px-6 py-5 border-b border-[#8B1A1A]/10">
+          <div>
+            <h2 className="font-bold text-[#1a0505] text-lg">Aktivitas Terbaru</h2>
+            <p className="text-xs text-[#3a1a1a]/50 mt-0.5">Update booking terbaru</p>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs text-[#3a1a1a]/50">Total: {pagination.total} pesanan</span>
+          </div>
+        </div>
+        <div className="overflow-x-auto">
           <table className="w-full text-sm">
             <thead>
-              <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
-                <th className="px-6 py-3 text-left">Sesi</th>
-                <th className="px-6 py-3 text-left">Paket</th>
-                <th className="px-6 py-3 text-left">Customer</th>
-                <th className="px-6 py-3 text-left">Status</th>
+              <tr className="bg-[#FBF7F1] text-[#3a1a1a]/50 text-xs uppercase tracking-wide">
+                <th className="px-6 py-3 text-left font-bold">Customer</th>
+                <th className="px-6 py-3 text-left font-bold">Paket</th>
+                <th className="px-6 py-3 text-left font-bold">Total</th>
+                <th className="px-6 py-3 text-left font-bold">Status</th>
+                <th className="px-6 py-3 text-left font-bold">Waktu</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-gray-50">
-              {todayOrders.map(order => (
-                <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-6 py-4 font-medium text-gray-800">
-                    {order.scheduled_at ? formatTime(order.scheduled_at) : "—"}
+            <tbody className="divide-y divide-[#8B1A1A]/5">
+              {orders.map(order => (
+                <tr key={order.id} className="hover:bg-[#FBF7F1]/50 transition-colors">
+                  <td className="px-6 py-4">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-full bg-gradient-to-br from-[#8B1A1A] to-[#6B1212] flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
+                        {((order.profiles as any)?.full_name ?? "?")[0].toUpperCase()}
+                      </div>
+                      <div>
+                        <p className="font-semibold text-[#1a0505]">{(order.profiles as any)?.full_name ?? "-"}</p>
+                        <p className="text-xs text-[#3a1a1a]/40">{(order.profiles as any)?.email ?? ""}</p>
+                      </div>
+                    </div>
                   </td>
-                  <td className="px-6 py-4 text-gray-600">{(order.packages as any)?.title ?? "-"}</td>
-                  <td className="px-6 py-4 text-gray-700">{(order.profiles as any)?.full_name ?? "-"}</td>
+                  <td className="px-6 py-4 text-[#3a1a1a]/70">{(order.packages as any)?.title ?? "-"}</td>
+                  <td className="px-6 py-4 font-semibold text-[#1a0505]">
+                    Rp {new Intl.NumberFormat("id-ID").format(order.total_price_idr)}
+                  </td>
                   <td className="px-6 py-4">
                     <StatusDropdown orderId={order.id} current={order.status} onUpdate={handleStatusUpdate} />
                   </td>
+                  <td className="px-6 py-4 text-[#3a1a1a]/50 text-xs">{timeAgo(order.created_at)}</td>
                 </tr>
               ))}
             </tbody>
           </table>
-        )}
-      </div>
-
-      {/* Aktivitas Terbaru */}
-      <div className="bg-white rounded-2xl border border-gray-100 shadow-sm">
-        <div className="flex items-center justify-between px-6 py-5 border-b border-gray-100">
-          <div>
-            <h2 className="font-bold text-gray-800 text-lg">Aktivitas Terbaru</h2>
-            <p className="text-xs text-gray-400">Update booking terbaru</p>
-          </div>
         </div>
-        <table className="w-full text-sm">
-          <thead>
-            <tr className="bg-gray-50 text-gray-500 text-xs uppercase tracking-wide">
-              <th className="px-6 py-3 text-left">Customer</th>
-              <th className="px-6 py-3 text-left">Paket</th>
-              <th className="px-6 py-3 text-left">Status</th>
-              <th className="px-6 py-3 text-left">Waktu</th>
-            </tr>
-          </thead>
-          <tbody className="divide-y divide-gray-50">
-            {orders.map(order => (
-              <tr key={order.id} className="hover:bg-gray-50 transition-colors">
-                <td className="px-6 py-4">
-                  <div className="flex items-center gap-3">
-                    <div className="w-9 h-9 rounded-full bg-gradient-to-br from-red-400 to-red-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0">
-                      {((order.profiles as any)?.full_name ?? "?")[0].toUpperCase()}
-                    </div>
-                    <div>
-                      <p className="font-semibold text-gray-800">{(order.profiles as any)?.full_name ?? "-"}</p>
-                      <p className="text-xs text-gray-400">{(order.profiles as any)?.email ?? ""}</p>
-                    </div>
-                  </div>
-                </td>
-                <td className="px-6 py-4 text-gray-600">{(order.packages as any)?.title ?? "-"}</td>
-                <td className="px-6 py-4">
-                  <StatusDropdown orderId={order.id} current={order.status} onUpdate={handleStatusUpdate} />
-                </td>
-                <td className="px-6 py-4 text-gray-400 text-xs">{timeAgo(order.created_at)}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+
+        {pagination.totalPages > 1 && (
+          <div className="flex items-center justify-between px-6 py-4 border-t border-[#8B1A1A]/10">
+            <span className="text-xs text-[#3a1a1a]/50">
+              Page {currentPage} dari {pagination.totalPages}
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                onClick={() => { setCurrentPage(p => Math.max(1, p - 1)); fetchData(currentPage - 1); }}
+                disabled={currentPage <= 1}
+                className="px-3 py-1.5 rounded-full border border-[#8B1A1A]/20 text-xs font-semibold disabled:opacity-50 hover:bg-[#8B1A1A]/5 transition-all"
+              >
+                Prev
+              </button>
+              <button
+                onClick={() => { setCurrentPage(p => Math.min(pagination.totalPages, p + 1)); fetchData(currentPage + 1); }}
+                disabled={currentPage >= pagination.totalPages}
+                className="px-3 py-1.5 rounded-full border border-[#8B1A1A]/20 text-xs font-semibold disabled:opacity-50 hover:bg-[#8B1A1A]/5 transition-all"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

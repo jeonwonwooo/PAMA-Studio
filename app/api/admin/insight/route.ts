@@ -1,12 +1,19 @@
 import { NextRequest, NextResponse } from "next/server";
-import Groq from "groq-sdk"; // Re-triggered recompile
+import Groq from "groq-sdk";
+import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 import { getAnalyticsData, AnalyticsRange } from "@/lib/analytics-queries";
+import { verifyAdmin } from "@/lib/auth-helpers";
 
 const groq = new Groq({
   apiKey: process.env.GROQ_API_INSIGHT_KEY,
 });
 
 export async function POST(req: NextRequest) {
+  const check = await verifyAdmin();
+  if (!check.success) {
+    return NextResponse.json({ message: check.error!.message }, { status: check.error!.status });
+  }
+
   try {
     const { range } = (await req.json()) as { range: AnalyticsRange };
 
@@ -83,7 +90,7 @@ export async function POST(req: NextRequest) {
   } catch (error: any) {
     console.error("AI Insight Full Error:", error);
     return NextResponse.json(
-      { error: "Internal Server Error", details: error.message, stack: error.stack },
+      { error: "Internal Server Error", details: error.message },
       { status: 500 }
     );
   }

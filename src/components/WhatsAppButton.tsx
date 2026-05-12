@@ -2,11 +2,12 @@
 
 import { MessageCircle } from "lucide-react";
 
+const WA_ADMIN = process.env.NEXT_PUBLIC_WA_ADMIN || "6282331555431";
+
 export default function WhatsAppButton({ orderData }: { orderData: any }) {
   const handleWA = () => {
-    const adminPhone = "6282331555431";
     const text = `Halo PAMA Studio! Saya ingin konfirmasi pembayaran:\n\n*Order ID:* #${orderData.id.slice(0, 8)}\n*Paket:* ${orderData.packages?.title}\n*Total:* Rp ${new Intl.NumberFormat("id-ID").format(orderData.total_price_idr)}\n\nMohon instruksi selanjutnya.`;
-    window.open(`https://wa.me/${adminPhone}?text=${encodeURIComponent(text)}`, "_blank");
+    window.open(`https://wa.me/${WA_ADMIN}?text=${encodeURIComponent(text)}`, "_blank");
   };
 
   return (

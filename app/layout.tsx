@@ -19,6 +19,34 @@ const fraunces = Fraunces({
 export const metadata: Metadata = {
   title: "PAMA Studio | Self Photo Studio",
   description: "Abadikan versi terbaikmu dengan mudah di PAMA Studio.",
+  metadataBase: new URL("https://pama-studio.vercel.app"),
+  openGraph: {
+    title: "PAMA Studio | Self Photo Studio",
+    description: "Abadikan versi terbaikmu dengan mudah di PAMA Studio.",
+    url: "https://pama-studio.vercel.app",
+    siteName: "PAMA Studio",
+    locale: "id_ID",
+    type: "website",
+    images: [
+      {
+        url: "/og-image.png",
+        width: 1200,
+        height: 630,
+        alt: "PAMA Studio",
+      },
+    ],
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "PAMA Studio | Self Photo Studio",
+    description: "Abadikan versi terbaikmu dengan mudah di PAMA Studio.",
+    images: ["/og-image.png"],
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: { index: true, follow: true },
+  },
 };
 
 export default function RootLayout({

@@ -1,46 +1,90 @@
 "use client";
 
-import React from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ArrowRight, ChevronRight } from "lucide-react";
+import { ChevronRight } from "lucide-react";
 import { useInView } from "../../hooks/useInView";
+
+interface BestSellerPackage {
+  id: string;
+  studio: string;
+  type: string;
+  price: number;
+  priceFormatted: string;
+  features: string[];
+  image: string;
+  featured: boolean;
+  tag: string;
+}
 
 const BestSeller: React.FC = () => {
   const { ref: headerRef, inView: headerVisible } = useInView({ threshold: 0.2 });
   const { ref: cardsRef, inView: cardsVisible } = useInView({ threshold: 0.1 });
+  const [packages, setPackages] = useState<BestSellerPackage[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const packages = [
+  useEffect(() => {
+    const fetchBestSellers = async () => {
+      try {
+        const res = await fetch("/api/landing/bestsellers");
+        if (res.ok) {
+          const data = await res.json();
+          setPackages(data.packages || []);
+        }
+      } catch (error) {
+        console.error("Failed to fetch bestsellers:", error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchBestSellers();
+  }, []);
+
+  const defaultPackages: BestSellerPackage[] = [
     {
-      name: "",
-      price: "Pas Foto",
-      tag: "Paling Populer",
+      id: "pas-foto",
+      studio: "Pas Foto",
+      type: "pas_foto",
+      price: 0,
+      priceFormatted: "Pas Foto",
       features: ["1 Orang", "30 menit sesi", "15 foto edit", "2 wardrobe"],
-      img: "/images/pasfoto.jpg",
+      image: "/images/pasfoto.jpg",
+      featured: false,
+      tag: "Paling Populer",
     },
     {
-      name: "",
-      price: "Duo - Self Photo Studio 1",
-      tag: "Favorit Couple",
+      id: "studio-2",
+      studio: "Self Photo Studio 2",
+      type: "self_photo",
+      price: 0,
+      priceFormatted: "Duo",
       features: ["1-2 Orang", "10 menit sesi", "1 Print 4R"],
-      img: "/images/duo.jpg",
+      image: "/images/duo.jpg",
       featured: true,
+      tag: "Favorit Couple",
     },
     {
-      name: "",
-      price: "Basic - Self Photo Studio 1",
-      tag: "Terlaris Grup",
+      id: "studio-1",
+      studio: "Self Photo Studio 1",
+      type: "self_photo",
+      price: 0,
+      priceFormatted: "Basic",
       features: ["1-3 Orang", "15 menit sesi", "1 Print 4R"],
-      img: "/images/basic.jpg",
+      image: "/images/basic.jpg",
+      featured: false,
+      tag: "Terlaris Grup",
     },
   ];
+
+  const displayPackages = (packages.length > 0 ? packages : defaultPackages).slice(0, 3);
 
   return (
     <section
       id="paket"
       className="relative overflow-hidden bg-gradient-to-br from-[#8B1A1A] via-[#761414] to-[#5C0E0E] py-16 lg:py-24"
     >
-      {/* subtle dots */}
       <div
         className="absolute inset-0 opacity-[0.06]"
         style={{
@@ -96,127 +140,127 @@ const BestSeller: React.FC = () => {
           </div>
         </div>
 
-        {/* Cards */}
-<div
-  ref={cardsRef}
-  className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-end"
->
-  {packages.map((p, i) => (
-    <div
-      key={i}
-className={[
-  "group relative overflow-hidden rounded-[28px] h-full flex flex-col justify-between transform-gpu transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:scale-[1.015] hover:shadow-[0_24px_50px_-18px_rgba(0,0,0,0.22)]",
-  p.featured
-    ? "bg-[#FBF7F1]"
-    : "bg-white/95",
-].join(" ")}
-      style={{
-        opacity: cardsVisible ? 1 : 0,
-        transform: cardsVisible
-  ? "translateY(0) scale(1) rotateX(0deg)"
-  : "translateY(80px) scale(0.92) rotateX(6deg)",
-        transition: `opacity 0.8s cubic-bezier(0.16,1,0.3,1) ${
-          0.15 + i * 0.18
-        }s, transform 0.8s cubic-bezier(0.16,1,0.3,1) ${
-          0.15 + i * 0.18
-        }s`,
-      }}
-    >
-              {/* Shimmer overlay on hover */}
-              <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100"
-                style={{ transform: "skewX(-20deg) translateX(-100%)", animation: cardsVisible ? undefined : "none" }}
-              />
-
-              {/* image */}
-              <div className="relative aspect-[4/5] overflow-hidden">
-                <Image
-                  src={p.img}
-                  alt={p.name}
-                  fill
-                  unoptimized
-                  className="object-cover transition duration-700 group-hover:scale-105"
-                />
-                <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
-
-                {/* Tag */}
+        <div
+          ref={cardsRef}
+          className="mt-12 grid grid-cols-1 gap-6 md:grid-cols-2 lg:grid-cols-3 items-end"
+        >
+          {loading
+            ? [1, 2, 3].map((i) => (
                 <div
-                  className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#8B1A1A] backdrop-blur-md"
-                  style={{ fontFamily: "Inter Tight, sans-serif" }}
+                  key={i}
+                  className="h-[500px] rounded-[28px] bg-white/10 animate-pulse"
+                />
+              ))
+            : displayPackages.map((p, i) => (
+                <div
+                  key={p.id}
+                  className={[
+                    "group relative overflow-hidden rounded-[28px] h-full flex flex-col justify-between transform-gpu transition-all duration-700 ease-[cubic-bezier(0.22,1,0.36,1)] hover:-translate-y-2 hover:scale-[1.015] hover:shadow-[0_24px_50px_-18px_rgba(0,0,0,0.22)]",
+                    p.featured
+                      ? "bg-[#FBF7F1]"
+                      : "bg-white/95",
+                  ].join(" ")}
+                  style={{
+                    opacity: cardsVisible ? 1 : 0,
+                    transform: cardsVisible
+                      ? "translateY(0) scale(1) rotateX(0deg)"
+                      : "translateY(80px) scale(0.92) rotateX(6deg)",
+                    transition: `opacity 0.8s cubic-bezier(0.16,1,0.3,1) ${
+                      0.15 + i * 0.18
+                    }s, transform 0.8s cubic-bezier(0.16,1,0.3,1) ${
+                      0.15 + i * 0.18
+                    }s`,
+                  }}
                 >
-                  {p.tag}
-                </div>
+                  <div className="pointer-events-none absolute inset-0 z-10 bg-gradient-to-r from-transparent via-white/20 to-transparent opacity-0 transition-opacity duration-500 group-hover:opacity-100"
+                    style={{ transform: "skewX(-20deg) translateX(-100%)", animation: cardsVisible ? undefined : "none" }}
+                  />
 
-                {/* Price badge */}
-                {p.featured && (
-                  <div
-                    className="absolute right-4 top-4 rounded-full bg-[#8B1A1A] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-white"
-                    style={{ fontFamily: "Inter Tight, sans-serif" }}
-                  >
-                    Pilihan Kami
-                  </div>
-                )}
+                  <div className="relative aspect-[4/5] overflow-hidden">
+                    <Image
+                      src={p.image}
+                      alt={p.studio}
+                      fill
+                      unoptimized
+                      className="object-cover transition duration-700 group-hover:scale-105"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/50 via-black/10 to-transparent" />
 
-                {/* Title overlay */}
-                <div className="absolute bottom-4 left-4 right-4">
-                  <h3
-                    className="text-2xl text-white"
-                    style={{ fontFamily: "Fraunces, serif", fontWeight: 500 }}
-                  >
-                    {p.name}
-                  </h3>
-                </div>
-              </div>
-
-              {/* Body */}
-              <div className="p-6">
-                <div className="flex items-baseline justify-between">
-                  <div
-                     className="min-h-[96px] text-3xl font-semibold text-[#1a0505] leading-tight"
-                      style={{ fontFamily: "Fraunces, serif" }}
-                  >
-                      {p.price}
-                  </div>
-                  <div
-                    className="text-[11px] uppercase tracking-wider text-[#3a1a1a]/50"
-                    style={{ fontFamily: "Inter Tight, sans-serif" }}
-                  >
-                    / sesi
-                  </div>
-                </div>
-
-                <ul
-                  className="mt-5 space-y-2.5"
-                  style={{ fontFamily: "Inter Tight, sans-serif" }}
-                >
-                  {p.features.map((f, j) => (
-                    <li
-                      key={j}
-                      className="flex items-center gap-2.5 text-sm text-[#3a1a1a]/80"
-                      style={{
-                        opacity: cardsVisible ? 1 : 0,
-                        transform: cardsVisible ? "translateX(0)" : "translateX(-15px)",
-                        transition: `opacity 0.5s ease ${0.5 + i * 0.18 + j * 0.06}s, transform 0.5s ease ${0.5 + i * 0.18 + j * 0.06}s`,
-                      }}
+                    <div
+                      className="absolute left-4 top-4 rounded-full bg-white/90 px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-[#8B1A1A] backdrop-blur-md"
+                      style={{ fontFamily: "Inter Tight, sans-serif" }}
                     >
-                      <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#8B1A1A]/10 text-[#8B1A1A]">
-                        <svg
-                          className="h-2.5 w-2.5"
-                          viewBox="0 0 20 20"
-                          fill="currentColor"
+                      {p.tag}
+                    </div>
+
+                    {p.featured && (
+                      <div
+                        className="absolute right-4 top-4 rounded-full bg-[#8B1A1A] px-3 py-1.5 text-[11px] font-semibold uppercase tracking-wider text-white"
+                        style={{ fontFamily: "Inter Tight, sans-serif" }}
+                      >
+                        Pilihan Kami
+                      </div>
+                    )}
+
+                    <div className="absolute bottom-4 left-4 right-4">
+                      <h3
+                        className="text-2xl text-white"
+                        style={{ fontFamily: "Fraunces, serif", fontWeight: 500 }}
+                      >
+                        {p.studio}
+                      </h3>
+                    </div>
+                  </div>
+
+                  <div className="p-6">
+                    <div className="flex items-baseline justify-between">
+                      <div
+                        className="min-h-[96px] text-3xl font-semibold text-[#1a0505] leading-tight"
+                        style={{ fontFamily: "Fraunces, serif" }}
+                      >
+                        {p.priceFormatted}
+                      </div>
+                      <div
+                        className="text-[11px] uppercase tracking-wider text-[#3a1a1a]/50"
+                        style={{ fontFamily: "Inter Tight, sans-serif" }}
+                      >
+                        / sesi
+                      </div>
+                    </div>
+
+                    <ul
+                      className="mt-5 space-y-2.5"
+                      style={{ fontFamily: "Inter Tight, sans-serif" }}
+                    >
+                      {p.features.map((f, j) => (
+                        <li
+                          key={j}
+                          className="flex items-center gap-2.5 text-sm text-[#3a1a1a]/80"
+                          style={{
+                            opacity: cardsVisible ? 1 : 0,
+                            transform: cardsVisible ? "translateX(0)" : "translateX(-15px)",
+                            transition: `opacity 0.5s ease ${0.5 + i * 0.18 + j * 0.06}s, transform 0.5s ease ${0.5 + i * 0.18 + j * 0.06}s`,
+                          }}
                         >
-                          <path
-                            fillRule="evenodd"
-                            d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 011.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"
-                          />
-                        </svg>
-                      </span>
-                      {f}
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            </div>
-          ))}
+                          <span className="flex h-4 w-4 items-center justify-center rounded-full bg-[#8B1A1A]/10 text-[#8B1A1A]">
+                            <svg
+                              className="h-2.5 w-2.5"
+                              viewBox="0 0 20 20"
+                              fill="currentColor"
+                            >
+                              <path
+                                fillRule="evenodd"
+                                d="M16.7 5.3a1 1 0 010 1.4l-8 8a1 1 0 01-1.4 0l-4-4a1 1 0 011.4-1.4L8 12.6l7.3-7.3a1 1 0 011.4 0z"
+                              />
+                            </svg>
+                          </span>
+                          {f}
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
+                </div>
+              ))}
         </div>
       </div>
     </section>
