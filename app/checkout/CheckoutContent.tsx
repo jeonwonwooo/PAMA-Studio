@@ -11,9 +11,9 @@ import {
   Sparkles,
 } from "lucide-react";
 
-import { createSupabaseBrowserClient } from "../../src/lib/supabase/supabase-browser";
 import CheckoutAuthModal from "../../src/components/ui/AuthModal";
 import SuccessModal from "../../src/components/ui/SuccessModal";
+import { createSupabaseBrowserClient } from "@/lib/supabase/supabase-browser";
 
 // --- Types ---
 type PackageRow = {
@@ -101,34 +101,41 @@ export default function CheckoutContent() {
         setLoadingData(false);
         return;
       }
+
       setLoadingData(true);
       setErr("");
 
-      const { data: pkgData, error: pkgErr } = await supabase
-        .from("packages")
-        .select("id,type,title,description,includes,duration_minutes,min_people,max_people,base_price_idr")
-        .eq("id", packageId)
-        .single();
+      try {
+        const packageRes = await fetch(`/api/packages/${encodeURIComponent(packageId)}`);
+        const packageJson = await packageRes.json();
 
-      if (pkgErr) {
-        setErr(pkgErr.message);
+        if (!packageRes.ok) {
+          setErr(packageJson.message || "Gagal memuat paket");
+          setLoadingData(false);
+          return;
+        }
+
+        setPkg(packageJson.package as PackageRow);
+
+        const addonsRes = await fetch("/api/addons");
+        const addonsJson = await addonsRes.json();
+
+        if (!addonsRes.ok) {
+          setErr(addonsJson.message || "Gagal memuat addons");
+          setLoadingData(false);
+          return;
+        }
+
+        setAddons((addonsJson.addons ?? []) as AddonRow[]);
+      } catch (error) {
+        console.error("Checkout load data error:", error);
+        setErr("Gagal memuat data paket");
+      } finally {
         setLoadingData(false);
-        return;
       }
-
-      setPkg(pkgData as PackageRow);
-
-      const { data: addonData } = await supabase
-        .from("addons")
-        .select("id,title,description,price_idr,is_active")
-        .eq("is_active", true)
-        .order("price_idr", { ascending: true });
-
-      setAddons((addonData ?? []) as AddonRow[]);
-      setLoadingData(false);
     };
     run();
-  }, [packageId, supabase]);
+  }, [packageId]);
 
   // --- Fetch Time Availability ---
   const loadAvailability = useCallback(async () => {
@@ -166,28 +173,36 @@ export default function CheckoutContent() {
   // --- Auth Listeners ---
   useEffect(() => {
     const init = async () => {
-      const { data } = await supabase.auth.getSession();
-      const has = !!data.session;
-      setIsAuthed(has);
-      if (data.session) setUserData(data.session.user);
-      setSessionReady(true);
-      if (!has) setAuthOpen(true);
-    };
-    init();
+      try {
+        const res = await fetch("/api/profile");
+        if (!res.ok) {
+          setIsAuthed(false);
+          setUserData(null);
+          setSessionReady(true);
+          setAuthOpen(true);
+          return;
+        }
 
-    const { data: sub } = supabase.auth.onAuthStateChange((_event, session) => {
-      const has = !!session;
-      setIsAuthed(has);
-      if (session) setUserData(session.user);
-      setSessionReady(true);
-      if (has) {
+        const data = await res.json();
+        setIsAuthed(true);
+        setUserData(data.user);
+        setSessionReady(true);
         setAuthOpen(false);
-        if ((pkg?.duration_minutes ?? 0) > 0) loadAvailability();
-      }
-    });
 
-    return () => sub.subscription.unsubscribe();
-  }, [supabase, pkg?.duration_minutes, loadAvailability]);
+        if ((pkg?.duration_minutes ?? 0) > 0) {
+          loadAvailability();
+        }
+      } catch (error) {
+        console.error("Checkout auth init error:", error);
+        setIsAuthed(false);
+        setUserData(null);
+        setSessionReady(true);
+        setAuthOpen(true);
+      }
+    };
+
+    init();
+  }, [pkg?.duration_minutes, loadAvailability]);
 
   useEffect(() => {
     if (pkg && needsSlot) loadAvailability();

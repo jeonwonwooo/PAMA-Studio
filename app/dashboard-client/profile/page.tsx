@@ -1,28 +1,36 @@
 "use client";
 
 import React, { useEffect, useState } from "react";
-import { createSupabaseBrowserClient } from "../../../src/lib/supabase/supabase-browser";
-import { 
-  User, 
-  Mail, 
-  Phone, 
-  MapPin, 
-  Camera, 
+import {
+  User,
+  Mail,
+  Phone,
+  MapPin,
+  Camera,
   ShieldCheck,
-  Edit2
+  Edit2,
 } from "lucide-react";
 
 export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
-  const supabase = createSupabaseBrowserClient();
 
   useEffect(() => {
     const getUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user);
+      try {
+        const res = await fetch("/api/profile");
+        if (!res.ok) {
+          setUser(null);
+          return;
+        }
+        const data = await res.json();
+        setUser(data.user);
+      } catch (error) {
+        console.error("Profile page fetch error:", error);
+        setUser(null);
+      }
     };
     getUser();
-  }, [supabase]);
+  }, []);
 
   return (
     <div className="max-w-4xl mx-auto space-y-8" style={{ fontFamily: "var(--font-inter-tight)" }}>

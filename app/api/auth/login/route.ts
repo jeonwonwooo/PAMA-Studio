@@ -1,35 +1,57 @@
 import { NextRequest, NextResponse } from "next/server";
+import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 
-// ── CONTOH ENDPOINT LOGIN ──
-// Ganti logika di bawah dengan koneksi ke database Anda (Prisma, Supabase, dsb.)
 export async function POST(request: NextRequest) {
   try {
     const { email, password } = await request.json();
+    const normalizedEmail = String(email ?? "").trim().toLowerCase();
+    const normalizedPassword = String(password ?? "");
 
-    // Validasi input
-    if (!email || !password) {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!normalizedEmail || !emailRegex.test(normalizedEmail)) {
       return NextResponse.json(
-        { message: "Email dan password wajib diisi" },
+        { message: "Format email tidak valid" },
         { status: 400 }
       );
     }
 
-    // ─── GANTI BLOK INI DENGAN LOGIKA AUTH ANDA ───
-    // Contoh: cari user di database, bandingkan hash password, buat JWT/session
-    //
-    // const user = await prisma.user.findUnique({ where: { email } });
-    // if (!user || !await bcrypt.compare(password, user.passwordHash)) {
-    //   return NextResponse.json({ message: "Email atau password salah" }, { status: 401 });
-    // }
-    // const token = jwt.sign({ userId: user.id }, process.env.JWT_SECRET!, { expiresIn: "7d" });
-    // ───────────────────────────────────────────────
+    if (!normalizedPassword) {
+      return NextResponse.json(
+        { message: "Password wajib diisi" },
+        { status: 400 }
+      );
+    }
 
-    // Placeholder response — hapus setelah backend ready
+    const supabase = await createSupabaseServerClient();
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password: normalizedPassword,
+    });
+
+    if (error || !data.user) {
+      return NextResponse.json(
+        { message: error?.message || "Email atau password salah" },
+        { status: 401 }
+      );
+    }
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("role, full_name")
+      .eq("id", data.user.id)
+      .single();
+
+    if (profileError) {
+      console.error("Failed to load profile after login:", profileError);
+    }
+
     return NextResponse.json({
       message: "Login berhasil",
-      user: { email },
+      user: data.user,
+      profile,
     });
-  } catch {
+  } catch (error) {
+    console.error("Login error:", error);
     return NextResponse.json(
       { message: "Terjadi kesalahan server" },
       { status: 500 }
