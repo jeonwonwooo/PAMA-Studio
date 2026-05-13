@@ -120,7 +120,8 @@ const Navbar: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={handlePesanClick}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-[#8B1A1A] to-[#6B1212] px-5 py-2.5 text-sm font-medium text-white"
+                disabled={!ready}
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-[#8B1A1A] to-[#6B1212] px-5 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Pesan <ArrowUpRight className="h-3.5 w-3.5" />
               </button>
@@ -277,7 +278,8 @@ const Navbar: React.FC = () => {
                   setMenuOpen(false);
                   handlePesanClick();
                 }}
-                className="mt-2 w-full rounded-2xl bg-[#8B1A1A] px-4 py-3 text-white text-sm font-semibold"
+                disabled={!ready}
+                className="mt-2 w-full rounded-2xl bg-[#8B1A1A] px-4 py-3 text-white text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Pesan Sekarang
               </button>
