@@ -9,24 +9,22 @@ export async function middleware(request: NextRequest) {
   const isProtected = PROTECTED_PATHS.some((path) => pathname.startsWith(path));
   if (!isProtected) return NextResponse.next();
 
-  // Cek cookie Supabase SSR — formatnya sb-<project-ref>-auth-token
   const allCookies = request.cookies.getAll();
   const authCookie = allCookies.find(
     (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token")
   );
 
-  if (!authCookie?.value) {
+  if (!authCookie?.value || authCookie.value.length < 10) {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
-  // Validasi value-nya bukan string kosong atau invalid
   try {
     const parsed = JSON.parse(authCookie.value);
     if (!parsed?.access_token) {
       return NextResponse.redirect(new URL("/", request.url));
     }
   } catch {
-    return NextResponse.redirect(new URL("/", request.url));
+    // not JSON — might be a token string, allow through
   }
 
   return NextResponse.next();

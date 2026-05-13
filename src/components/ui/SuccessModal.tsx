@@ -27,8 +27,6 @@ Mohon konfirmasinya ya!`;
 
   const handleClose = () => {
     onClose();
-    router.push("/dashboard-client");
-    router.refresh();
   };
 
   return (

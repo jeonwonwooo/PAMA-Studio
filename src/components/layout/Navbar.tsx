@@ -160,15 +160,17 @@ const Navbar: React.FC = () => {
                                   {profile?.email ?? ""}
                                 </p>
                               </div>
-                              <button
-                                onClick={() => {
-                                  router.push("/dashboard-client");
-                                  setDropdownOpen(false);
-                                }}
-                                className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition"
-                              >
-                                <LayoutDashboard size={16} /> Dashboard
-                              </button>
+                              {profile?.role !== "admin" && (
+                                <button
+                                  onClick={() => {
+                                    router.push("/dashboard-client");
+                                    setDropdownOpen(false);
+                                  }}
+                                  className="w-full flex items-center gap-3 px-4 py-3 text-sm text-gray-700 hover:bg-gray-50 transition"
+                                >
+                                  <LayoutDashboard size={16} /> Dashboard
+                                </button>
+                              )}
                               {profile?.role === "admin" && (
                                 <button
                                   onClick={() => {
@@ -232,15 +234,17 @@ const Navbar: React.FC = () => {
                       </p>
                       <p className="text-xs text-gray-400">{profile?.email ?? ""}</p>
                     </div>
-                    <button
-                      onClick={() => {
-                        router.push("/dashboard-client");
-                        setMenuOpen(false);
-                      }}
-                      className="w-full flex items-center gap-2 rounded-2xl border border-[#8B1A1A]/20 px-4 py-3 text-sm text-[#8B1A1A] mt-1"
-                    >
-                      <LayoutDashboard size={16} /> Dashboard
-                    </button>
+                    {profile?.role !== "admin" && (
+                      <button
+                        onClick={() => {
+                          router.push("/dashboard-client");
+                          setMenuOpen(false);
+                        }}
+                        className="w-full flex items-center gap-2 rounded-2xl border border-[#8B1A1A]/20 px-4 py-3 text-sm text-[#8B1A1A] mt-1"
+                      >
+                        <LayoutDashboard size={16} /> Dashboard
+                      </button>
+                    )}
                     {profile?.role === "admin" && (
                       <button
                         onClick={() => {
