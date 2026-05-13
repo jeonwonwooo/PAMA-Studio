@@ -117,7 +117,7 @@ export default function AuthModal({
     const emailRedirectTo =
       typeof window === "undefined"
         ? undefined
-        : `${window.location.origin}/api/auth/callback?redirectTo=/dashboard-client`;
+        : `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/api/auth/callback?redirectTo=/dashboard-client`;
 
     const { data, error } = await supabase.auth.signUp({
       email,

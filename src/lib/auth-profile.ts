@@ -11,7 +11,6 @@ interface RawProfileRow {
   full_name: string | null;
   email: string | null;
   role: string | null;
-  phone?: string | null;
   phone_whatsapp?: string | null;
 }
 
@@ -24,7 +23,7 @@ export function normalizeProfile(profile: RawProfileRow | null | undefined): Aut
     full_name: profile.full_name ?? "",
     email: profile.email ?? "",
     role: profile.role === "admin" ? "admin" : "client",
-    phone: profile.phone_whatsapp ?? profile.phone ?? undefined,
+    phone: profile.phone_whatsapp ?? undefined,
   };
 }
 

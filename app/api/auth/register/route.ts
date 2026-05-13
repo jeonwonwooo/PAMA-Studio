@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
+import { getSiteUrl } from "@/lib/site-url";
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
@@ -15,7 +16,6 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const origin = new URL(request.url).origin;
     const body = await request.json();
     const name = body?.name;
     const email = body?.email;
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         data: {
           full_name: normalizedName,
         },
-        emailRedirectTo: `${origin}/api/auth/callback?redirectTo=/dashboard-client`,
+        emailRedirectTo: `${getSiteUrl()}/api/auth/callback?redirectTo=/dashboard-client`,
       },
     });
 
