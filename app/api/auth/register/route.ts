@@ -15,6 +15,7 @@ export async function POST(request: NextRequest) {
   }
 
   try {
+    const origin = new URL(request.url).origin;
     const body = await request.json();
     const name = body?.name;
     const email = body?.email;
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
         data: {
           full_name: normalizedName,
         },
+        emailRedirectTo: `${origin}/api/auth/callback?redirectTo=/dashboard-client`,
       },
     });
 
@@ -71,21 +73,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (data.user?.id) {
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: data.user.id,
-        full_name: normalizedName,
-        email: normalizedEmail,
-        role: "client",
-      });
-
-      if (profileError) {
-        console.error("Failed to create profile after register:", profileError);
-      }
-    }
-
     return NextResponse.json({
-      message: "Registrasi berhasil. Silakan login.",
+      message: data.session
+        ? "Registrasi berhasil."
+        : "Registrasi berhasil. Silakan cek email untuk verifikasi akun.",
+      user: data.user,
+      session: data.session,
+      requiresEmailConfirmation: !data.session,
     });
   } catch (error) {
     console.error("Register error:", error);
