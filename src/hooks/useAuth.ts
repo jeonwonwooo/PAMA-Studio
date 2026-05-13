@@ -92,11 +92,11 @@ export function useAuth() {
     ]);
 
     if (clientLogout.status === "rejected") {
-      console.error("Client logout failed:", clientLogout.reason);
+      console.error("Client-side Supabase logout failed:", clientLogout.reason);
     }
 
     if (serverLogout.status === "rejected") {
-      console.error("Server logout failed:", serverLogout.reason);
+      console.error("Server-side logout API call failed:", serverLogout.reason);
     }
 
     setAuthState({ user: null, profile: null, loading: false, ready: true });

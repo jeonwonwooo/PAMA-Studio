@@ -30,7 +30,7 @@ This project uses [`next/font`](https://nextjs.org/docs/app/building-your-applic
 
 Kalau login/register masih bermasalah, cek urutan berikut:
 
-1. Salin `.env.example` ke `.env.local`, lalu isi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, dan `NEXT_PUBLIC_SITE_URL` dengan project/app URL yang benar.
+1. Salin `.env.example` ke `.env.local`, lalu isi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, dan `NEXT_PUBLIC_SITE_URL` dengan URL project atau app yang benar.
 2. Jalankan migration Supabase terbaru agar trigger sinkronisasi `profiles` aktif.
 3. Di Supabase Dashboard, cek **Authentication → Users** untuk memastikan user benar-benar dibuat di `auth.users`.
 4. Setelah login di browser, cek cookie/session Supabase (`sb-...`) di DevTools dan pastikan request ke `/api/profile` mengembalikan user + profile.

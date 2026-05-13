@@ -1,5 +1,7 @@
 import type { SupabaseClient, User } from "@supabase/supabase-js";
 
+const DEFAULT_PROFILE_NAME = "Pelanggan PAMA";
+
 export interface AuthProfile {
   full_name: string;
   email: string;
@@ -62,5 +64,5 @@ export async function fetchProfileByUserId(
 }
 
 function getFallbackName(fullName?: string | null, email?: string | null) {
-  return fullName?.trim() || email?.split("@")[0] || "Pelanggan PAMA";
+  return fullName?.trim() || email?.split("@")[0] || DEFAULT_PROFILE_NAME;
 }
