@@ -86,8 +86,19 @@ export function useAuth() {
   }, [loadUser, setSessionState, supabase]);
 
   const logout = useCallback(async () => {
-    await supabase.auth.signOut();
-    await fetch("/api/auth/logout", { method: "POST" });
+    const [clientLogout, serverLogout] = await Promise.allSettled([
+      supabase.auth.signOut(),
+      fetch("/api/auth/logout", { method: "POST" }),
+    ]);
+
+    if (clientLogout.status === "rejected") {
+      console.error("Client logout failed:", clientLogout.reason);
+    }
+
+    if (serverLogout.status === "rejected") {
+      console.error("Server logout failed:", serverLogout.reason);
+    }
+
     setAuthState({ user: null, profile: null, loading: false, ready: true });
   }, [supabase]);
 

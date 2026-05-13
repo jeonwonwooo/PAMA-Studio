@@ -35,7 +35,6 @@ Kalau login/register masih bermasalah, cek urutan berikut:
 3. Di Supabase Dashboard, cek **Authentication → Users** untuk memastikan user benar-benar dibuat di `auth.users`.
 4. Setelah login di browser, cek cookie/session Supabase (`sb-...`) di DevTools dan pastikan request ke `/api/profile` mengembalikan user + profile.
 5. Jika register butuh verifikasi email, pastikan **Site URL / Redirect URL** Supabase mengizinkan callback ke `/api/auth/callback`.
-6. Bila build lokal gagal saat `next build`, verifikasi koneksi ke Google Fonts karena repo ini masih memakai font eksternal di `app/layout.tsx`.
 
 ## Learn More
 

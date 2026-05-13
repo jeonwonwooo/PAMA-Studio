@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
-import { getSiteUrl } from "@/lib/site-url";
+import { getAuthCallbackUrl } from "@/lib/site-url";
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
@@ -62,7 +62,7 @@ export async function POST(request: NextRequest) {
         data: {
           full_name: normalizedName,
         },
-        emailRedirectTo: `${getSiteUrl()}/api/auth/callback?redirectTo=/dashboard-client`,
+        emailRedirectTo: getAuthCallbackUrl("/dashboard-client"),
       },
     });
 
@@ -74,9 +74,7 @@ export async function POST(request: NextRequest) {
     }
 
     return NextResponse.json({
-      message: data.session
-        ? "Registrasi berhasil."
-        : "Registrasi berhasil. Silakan cek email untuk verifikasi akun.",
+      message: getRegistrationMessage(Boolean(data.session)),
       user: data.user,
       session: data.session,
       requiresEmailConfirmation: !data.session,
@@ -88,4 +86,10 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+function getRegistrationMessage(hasSession: boolean) {
+  return hasSession
+    ? "Registrasi berhasil."
+    : "Registrasi berhasil. Silakan cek email untuk verifikasi akun.";
 }

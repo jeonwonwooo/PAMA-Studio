@@ -11,6 +11,7 @@ import {
   fetchProfileByUserId,
   type AuthProfile,
 } from "@/lib/auth-profile";
+import { getAuthCallbackUrl } from "@/lib/site-url";
 import { useToast } from "@/contexts/ToastContext";
 
 type Mode = "login" | "register";
@@ -115,9 +116,7 @@ export default function AuthModal({
     const email = getCleanEmail();
     const fullName = form.name.trim();
     const emailRedirectTo =
-      typeof window === "undefined"
-        ? undefined
-        : `${process.env.NEXT_PUBLIC_SITE_URL || window.location.origin}/api/auth/callback?redirectTo=/dashboard-client`;
+      typeof window === "undefined" ? undefined : getAuthCallbackUrl("/dashboard-client");
 
     const { data, error } = await supabase.auth.signUp({
       email,
