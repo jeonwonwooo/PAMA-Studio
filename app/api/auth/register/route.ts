@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
+import { getAuthCallbackUrl } from "@/lib/site-url";
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
@@ -61,6 +62,7 @@ export async function POST(request: NextRequest) {
         data: {
           full_name: normalizedName,
         },
+        emailRedirectTo: getAuthCallbackUrl("/dashboard-client"),
       },
     });
 
@@ -71,21 +73,11 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    if (data.user?.id) {
-      const { error: profileError } = await supabase.from("profiles").insert({
-        id: data.user.id,
-        full_name: normalizedName,
-        email: normalizedEmail,
-        role: "client",
-      });
-
-      if (profileError) {
-        console.error("Failed to create profile after register:", profileError);
-      }
-    }
-
     return NextResponse.json({
-      message: "Registrasi berhasil. Silakan login.",
+      message: getRegistrationMessage(Boolean(data.session)),
+      user: data.user,
+      session: data.session,
+      requiresEmailConfirmation: !data.session,
     });
   } catch (error) {
     console.error("Register error:", error);
@@ -94,4 +86,10 @@ export async function POST(request: NextRequest) {
       { status: 500 }
     );
   }
+}
+
+function getRegistrationMessage(hasSession: boolean) {
+  return hasSession
+    ? "Registrasi berhasil."
+    : "Registrasi berhasil. Silakan cek email untuk verifikasi akun.";
 }

@@ -6,6 +6,11 @@ import { X, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useAuthRedirect, type AuthRedirectType } from "@/hooks/useAuthRedirect";
 import { createSupabaseBrowserClient } from "@/lib/supabase/supabase-browser";
+import {
+  fetchProfileWithFallbackValues,
+  type AuthProfile,
+} from "@/lib/auth-profile";
+import { getAuthCallbackUrl } from "@/lib/site-url";
 import { useToast } from "@/contexts/ToastContext";
 
 type Mode = "login" | "register";
@@ -30,7 +35,7 @@ export default function AuthModal({
   onAuthSuccess,
 }: AuthModalProps) {
   const router = useRouter();
-  const { handleAuthSuccess, clearLoginIntent } = useAuthRedirect();
+  const { clearLoginIntent } = useAuthRedirect();
   const supabase = createSupabaseBrowserClient();
   const { addToast } = useToast();
 
@@ -56,6 +61,51 @@ export default function AuthModal({
   // 🔹 Helper
   const getCleanEmail = () => form.email.trim().toLowerCase();
 
+  const resolveProfile = async (userId: string, fallbackEmail: string, fallbackName?: string) => {
+    return fetchProfileWithFallbackValues(
+      supabase,
+      userId,
+      fallbackEmail,
+      fallbackName
+    );
+  };
+
+  const handleSuccessRedirect = (profile: AuthProfile | null) => {
+    onClose();
+    clearLoginIntent();
+
+    if (onAuthSuccess) {
+      onAuthSuccess();
+      return;
+    }
+
+    const role = profile?.role || "client";
+
+    if (role === "admin") {
+      addToast("success", "Login berhasil!", "Selamat datang di dashboard admin.");
+      router.push("/admin");
+      router.refresh();
+      return;
+    }
+
+    if (redirectType === "package" && packageId) {
+      addToast("success", "Login berhasil!", "Silakan lanjutkan booking paket pilihan kamu.");
+      router.push(`/checkout?packageId=${packageId}`);
+      router.refresh();
+    } else if (redirectType === "checkout" && packageId) {
+      addToast("success", "Login berhasil!", "Silakan pilih jadwal dan lanjutkan booking.");
+      router.refresh();
+    } else if (redirectType === "landing") {
+      addToast("success", "Login berhasil!", "Pilih paket yang sesuai dengan kebutuhan kamu.");
+      router.push("/paket");
+      router.refresh();
+    } else {
+      addToast("success", "Login berhasil!", "Selamat datang kembali!");
+      router.push("/dashboard-client");
+      router.refresh();
+    }
+  };
+
   const validate = () => {
     if (!form.email || !form.password) return "Email dan password wajib diisi.";
     if (mode === "register" && !form.name.trim()) return "Nama wajib diisi.";
@@ -66,82 +116,54 @@ export default function AuthModal({
   // 🔥 HANDLE REGISTER
   const handleRegister = async () => {
     const email = getCleanEmail();
+    const fullName = form.name.trim();
+    const emailRedirectTo = getAuthCallbackUrl("/dashboard-client");
 
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ name: form.name.trim(), email, password: form.password }),
+    const { data, error } = await supabase.auth.signUp({
+      email,
+      password: form.password,
+      options: {
+        data: {
+          full_name: fullName,
+        },
+        emailRedirectTo,
+      },
     });
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || "Registrasi gagal.");
+    if (error) {
+      throw new Error(error.message || "Registrasi gagal.");
+    }
+
+    if (data.session && data.user) {
+      const profile = await resolveProfile(data.user.id, email, fullName);
+      addToast("success", "Registrasi berhasil!", "Akun kamu sudah siap digunakan.");
+      handleSuccessRedirect(profile);
+      return;
     }
 
     setMode("login");
-    setError(data.message || "Registrasi berhasil! Silakan login.");
+    setError("");
+    addToast(
+      "success",
+      "Registrasi berhasil!",
+      "Cek email untuk verifikasi akun, lalu login kembali."
+    );
   };
 
   // 🔥 HANDLE LOGIN
   const handleLogin = async () => {
     const email = getCleanEmail();
-
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password: form.password }),
+    const { data, error } = await supabase.auth.signInWithPassword({
+      email,
+      password: form.password,
     });
 
-    const data = await res.json();
-    if (!res.ok) {
-      throw new Error(data.message || "Email atau password salah.");
+    if (error || !data.user) {
+      throw new Error(error?.message || "Email atau password salah.");
     }
 
-    await supabase.auth.refreshSession();
-
-    // Small delay to ensure session is fully refreshed
-    await new Promise(resolve => setTimeout(resolve, 300));
-
-    onClose();
-    clearLoginIntent();
-
-    // If custom success handler provided, use it
-    if (onAuthSuccess) {
-      onAuthSuccess();
-      return;
-    }
-
-    const role = data.profile?.role || "client";
-
-    // Admin always goes to admin dashboard
-    if (role === "admin") {
-      addToast("success", "Login berhasil!", "Selamat datang di dashboard admin.");
-      router.push("/admin");
-      router.refresh();
-      return;
-    }
-
-    // Handle different redirect scenarios
-    if (redirectType === "package" && packageId) {
-      // From package card "Booking" button -> go to checkout
-      addToast("success", "Login berhasil!", "Silakan lanjutkan booking paket pilihan kamu.");
-      router.push(`/checkout?packageId=${packageId}`);
-      router.refresh();
-    } else if (redirectType === "checkout" && packageId) {
-      // Already on checkout page -> stay there (handled by onAuthSuccess)
-      addToast("success", "Login berhasil!", "Silakan pilih jadwal dan lanjutkan booking.");
-      router.refresh();
-    } else if (redirectType === "landing") {
-      // From navbar "Pesan" button -> go to package list
-      addToast("success", "Login berhasil!", "Pilih paket yang sesuai dengan kebutuhan kamu.");
-      router.push("/paket");
-      router.refresh();
-    } else {
-      // Default: go to dashboard
-      addToast("success", "Login berhasil!", "Selamat datang kembali!");
-      router.push("/dashboard-client");
-      router.refresh();
-    }
+    const profile = await resolveProfile(data.user.id, data.user.email ?? email);
+    handleSuccessRedirect(profile);
   };
 
   // 🔥 MAIN SUBMIT

@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
-import { createSupabaseServerClient } from "../../../src/lib/supabase/supabase-server";
+import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
+import {
+  fetchProfileWithFallback,
+} from "@/lib/auth-profile";
 
 export async function GET() {
   const supabase = await createSupabaseServerClient();
@@ -9,15 +12,7 @@ export async function GET() {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const { data: profile, error: profileError } = await supabase
-    .from("profiles")
-    .select("full_name, email, role, phone_whatsapp")
-    .eq("id", user.id)
-    .single();
-
-  if (profileError) {
-    console.error("Failed to load profile:", profileError);
-  }
+  const profile = await fetchProfileWithFallback(supabase, user);
 
   return NextResponse.json({ user, profile });
 }

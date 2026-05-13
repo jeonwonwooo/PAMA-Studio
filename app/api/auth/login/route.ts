@@ -1,14 +1,9 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
+import {
+  fetchProfileWithFallback,
+} from "@/lib/auth-profile";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
-
-const COOKIE_OPTIONS = {
-  maxAge: 60 * 60 * 24 * 30,
-  path: "/",
-  sameSite: "lax" as const,
-  httpOnly: true,
-  secure: process.env.NODE_ENV === "production",
-};
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
@@ -65,28 +60,13 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const { data: profile, error: profileError } = await supabase
-      .from("profiles")
-      .select("role, full_name")
-      .eq("id", data.user.id)
-      .single();
+    const profile = await fetchProfileWithFallback(supabase, data.user);
 
-    if (profileError) {
-      console.error("Failed to load profile after login:", profileError);
-    }
-
-    const response = NextResponse.json({
+    return NextResponse.json({
       message: "Login berhasil",
       user: data.user,
       profile,
     });
-
-    if (data.session) {
-      response.cookies.set("sb-access-token", data.session.access_token, COOKIE_OPTIONS);
-      response.cookies.set("sb-refresh-token", data.session.refresh_token, COOKIE_OPTIONS);
-    }
-
-    return response;
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(

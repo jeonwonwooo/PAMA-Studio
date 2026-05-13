@@ -20,6 +20,22 @@ You can start editing the page by modifying `app/page.tsx`. The page auto-update
 
 This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
 
+## Supabase Auth Notes
+
+- Autentikasi utama hanya memakai **Supabase Auth** (`auth.users`) lewat `supabase.auth.signUp`, `signInWithPassword`, dan `signOut`.
+- Tabel `public.profiles` hanya dipakai untuk data tambahan user. Sinkronisasi otomatis disiapkan lewat migration `supabase/migrations/20260513043000_sync_profiles_with_auth_users.sql`.
+- Frontend auth berjalan lewat browser client Supabase (`createSupabaseBrowserClient`) agar session/token tetap persisten di browser dan ikut tersinkron ke request SSR.
+
+## Auth Debug Checklist
+
+Kalau login/register masih bermasalah, cek urutan berikut:
+
+1. Salin `.env.example` ke `.env.local`, lalu isi `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_ANON_KEY`, dan `NEXT_PUBLIC_SITE_URL` dengan URL project atau app yang benar.
+2. Jalankan migration Supabase terbaru agar trigger sinkronisasi `profiles` aktif.
+3. Di Supabase Dashboard, cek **Authentication → Users** untuk memastikan user benar-benar dibuat di `auth.users`.
+4. Setelah login di browser, cek cookie/session Supabase (`sb-...`) di DevTools dan pastikan request ke `/api/profile` mengembalikan user + profile.
+5. Jika register butuh verifikasi email, pastikan **Site URL / Redirect URL** Supabase mengizinkan callback ke `/api/auth/callback`.
+
 ## Learn More
 
 To learn more about Next.js, take a look at the following resources:
