@@ -35,8 +35,12 @@ const Navbar: React.FC = () => {
   }, []);
 
   const handlePesanClick = () => {
-    if (user) router.push("/paket");
-    else setAuthOpen(true);
+    if (!ready) return;
+    if (user) {
+      router.push("/paket");
+      return;
+    }
+    setAuthOpen(true);
   };
 
   const handleLogout = async () => {
@@ -116,7 +120,8 @@ const Navbar: React.FC = () => {
             <div className="flex items-center gap-2">
               <button
                 onClick={handlePesanClick}
-                className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-[#8B1A1A] to-[#6B1212] px-5 py-2.5 text-sm font-medium text-white"
+                disabled={!ready}
+                className="hidden sm:inline-flex items-center gap-1.5 rounded-full bg-gradient-to-br from-[#8B1A1A] to-[#6B1212] px-5 py-2.5 text-sm font-medium text-white disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Pesan <ArrowUpRight className="h-3.5 w-3.5" />
               </button>
@@ -218,61 +223,63 @@ const Navbar: React.FC = () => {
                   {l.label}
                 </a>
               ))}
-              {user ? (
-                <>
-                  <div className="px-4 py-3 border-t border-gray-100 mt-1">
-                    <p className="text-sm font-bold text-gray-800">
-                      {profile?.full_name ?? "User"}
-                    </p>
-                    <p className="text-xs text-gray-400">{profile?.email ?? ""}</p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      router.push("/dashboard-client");
-                      setMenuOpen(false);
-                    }}
-                    className="w-full flex items-center gap-2 rounded-2xl border border-[#8B1A1A]/20 px-4 py-3 text-sm text-[#8B1A1A] mt-1"
-                  >
-                    <LayoutDashboard size={16} /> Dashboard
-                  </button>
-                  {profile?.role === "admin" && (
+              {ready &&
+                (user ? (
+                  <>
+                    <div className="px-4 py-3 border-t border-gray-100 mt-1">
+                      <p className="text-sm font-bold text-gray-800">
+                        {profile?.full_name ?? "User"}
+                      </p>
+                      <p className="text-xs text-gray-400">{profile?.email ?? ""}</p>
+                    </div>
                     <button
                       onClick={() => {
-                        router.push("/admin");
+                        router.push("/dashboard-client");
                         setMenuOpen(false);
                       }}
-                      className="mt-2 w-full flex items-center gap-2 rounded-2xl border border-[#8B1A1A]/20 px-4 py-3 text-sm text-[#8B1A1A]"
+                      className="w-full flex items-center gap-2 rounded-2xl border border-[#8B1A1A]/20 px-4 py-3 text-sm text-[#8B1A1A] mt-1"
                     >
-                      <ShoppingBag size={16} /> Admin Panel
+                      <LayoutDashboard size={16} /> Dashboard
                     </button>
-                  )}
+                    {profile?.role === "admin" && (
+                      <button
+                        onClick={() => {
+                          router.push("/admin");
+                          setMenuOpen(false);
+                        }}
+                        className="mt-2 w-full flex items-center gap-2 rounded-2xl border border-[#8B1A1A]/20 px-4 py-3 text-sm text-[#8B1A1A]"
+                      >
+                        <ShoppingBag size={16} /> Admin Panel
+                      </button>
+                    )}
+                    <button
+                      onClick={() => {
+                        handleLogout();
+                        setMenuOpen(false);
+                      }}
+                      className="mt-2 w-full rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 font-semibold"
+                    >
+                      Keluar
+                    </button>
+                  </>
+                ) : (
                   <button
                     onClick={() => {
-                      handleLogout();
+                      setAuthOpen(true);
                       setMenuOpen(false);
                     }}
-                    className="mt-2 w-full rounded-2xl bg-red-50 px-4 py-3 text-sm text-red-600 font-semibold"
+                    className="mt-2 w-full rounded-2xl border border-[#8B1A1A]/20 px-4 py-3 text-sm text-[#8B1A1A] font-semibold"
                   >
-                    Keluar
+                    Masuk / Daftar
                   </button>
-                </>
-              ) : (
-                <button
-                  onClick={() => {
-                    setAuthOpen(true);
-                    setMenuOpen(false);
-                  }}
-                  className="mt-2 w-full rounded-2xl border border-[#8B1A1A]/20 px-4 py-3 text-sm text-[#8B1A1A] font-semibold"
-                >
-                  Masuk / Daftar
-                </button>
-              )}
+                ))}
               <button
                 onClick={() => {
                   setMenuOpen(false);
                   handlePesanClick();
                 }}
-                className="mt-2 w-full rounded-2xl bg-[#8B1A1A] px-4 py-3 text-white text-sm font-semibold"
+                disabled={!ready}
+                className="mt-2 w-full rounded-2xl bg-[#8B1A1A] px-4 py-3 text-white text-sm font-semibold disabled:cursor-not-allowed disabled:opacity-60"
               >
                 Pesan Sekarang
               </button>
