@@ -2,6 +2,14 @@ import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
+const COOKIE_OPTIONS = {
+  maxAge: 60 * 60 * 24 * 30,
+  path: "/",
+  sameSite: "lax" as const,
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+};
+
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
   const { success, resetAt } = rateLimit(ip);
@@ -15,21 +23,31 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { email, password } = await request.json();
-    const normalizedEmail = String(email ?? "").trim().toLowerCase();
-    const normalizedPassword = String(password ?? "");
+    const body = await request.json();
+    const email = body?.email;
+    const password = body?.password;
+
+    if (!email || !password) {
+      return NextResponse.json(
+        { message: "Email dan password wajib diisi" },
+        { status: 400 }
+      );
+    }
+
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedPassword = String(password);
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!normalizedEmail || !emailRegex.test(normalizedEmail)) {
+    if (!emailRegex.test(normalizedEmail)) {
       return NextResponse.json(
         { message: "Format email tidak valid" },
         { status: 400 }
       );
     }
 
-    if (!normalizedPassword) {
+    if (normalizedPassword.length < 6) {
       return NextResponse.json(
-        { message: "Password wajib diisi" },
+        { message: "Password minimal 6 karakter" },
         { status: 400 }
       );
     }
@@ -57,12 +75,18 @@ export async function POST(request: NextRequest) {
       console.error("Failed to load profile after login:", profileError);
     }
 
-    return NextResponse.json({
+    const response = NextResponse.json({
       message: "Login berhasil",
       user: data.user,
       profile,
-      session: data.session,
     });
+
+    if (data.session) {
+      response.cookies.set("sb-access-token", data.session.access_token, COOKIE_OPTIONS);
+      response.cookies.set("sb-refresh-token", data.session.refresh_token, COOKIE_OPTIONS);
+    }
+
+    return response;
   } catch (error) {
     console.error("Login error:", error);
     return NextResponse.json(

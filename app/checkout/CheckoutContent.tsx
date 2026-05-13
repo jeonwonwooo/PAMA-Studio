@@ -213,6 +213,25 @@ export default function CheckoutContent() {
     }
   }, [packageId, pkg, date]);
 
+  const handleAuthSuccess = async () => {
+    try {
+      const res = await fetch("/api/profile");
+      if (res.ok) {
+        const data = await res.json();
+        setIsAuthed(true);
+        setUserData(data.user);
+        setAuthOpen(false);
+        if ((pkg?.duration_minutes ?? 0) > 0) {
+          loadAvailability();
+        }
+      } else {
+        setAuthOpen(true);
+      }
+    } catch {
+      setAuthOpen(true);
+    }
+  };
+
   useEffect(() => {
     const init = async () => {
       try {
@@ -350,12 +369,12 @@ export default function CheckoutContent() {
         isOpen={authOpen}
         onClose={() => {
           setAuthOpen(false);
-          router.push("/paket");
         }}
         title="Login untuk lanjut booking"
         subtitle="Masuk dulu biar kamu bisa pilih jadwal dan pesananmu tersimpan."
         redirectType="checkout"
         packageId={packageId ?? undefined}
+        onAuthSuccess={handleAuthSuccess}
       />
       <SuccessModal isOpen={isModalOpen} data={orderResult} onClose={() => { setIsModalOpen(false); router.push("/dashboard-client"); router.refresh(); }} />
 

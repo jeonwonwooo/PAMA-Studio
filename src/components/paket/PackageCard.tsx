@@ -42,7 +42,7 @@ const PackageCard: React.FC<{ data: PackageData; index: number }> = ({ data, ind
   const handleAuthSuccess = () => {
     setAuthOpen(false);
     if (selectedPackageId) {
-      window.location.href = `/checkout?packageId=${selectedPackageId}`;
+      router.push(`/checkout?packageId=${selectedPackageId}`);
     }
   };
 

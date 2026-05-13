@@ -1,17 +1,37 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 
+const COOKIE_OPTIONS = {
+  maxAge: 0,
+  path: "/",
+  sameSite: "lax" as const,
+  httpOnly: true,
+  secure: process.env.NODE_ENV === "production",
+};
+
 export async function POST() {
-  const supabase = await createSupabaseServerClient();
-  
-  // Refresh session first to get latest cookies
-  await supabase.auth.refreshSession();
-  const { error } = await supabase.auth.signOut();
+  try {
+    const supabase = await createSupabaseServerClient();
+    
+    // Sign out from Supabase
+    const { error } = await supabase.auth.signOut();
 
-  if (error) {
+    if (error) {
+      console.error("Logout error:", error);
+    }
+
+    // Clear cookies regardless of signOut result
+    const response = NextResponse.json({ ok: true, message: "Logout berhasil" });
+    response.cookies.set("sb-access-token", "", COOKIE_OPTIONS);
+    response.cookies.set("sb-refresh-token", "", COOKIE_OPTIONS);
+
+    return response;
+  } catch (error) {
     console.error("Logout error:", error);
-    return NextResponse.json({ message: error.message }, { status: 500 });
+    // Still clear cookies even if there's an error
+    const response = NextResponse.json({ ok: true, message: "Logout berhasil" });
+    response.cookies.set("sb-access-token", "", COOKIE_OPTIONS);
+    response.cookies.set("sb-refresh-token", "", COOKIE_OPTIONS);
+    return response;
   }
-
-  return NextResponse.json({ ok: true, message: "Logout berhasil" });
 }

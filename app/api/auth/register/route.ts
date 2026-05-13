@@ -15,27 +15,38 @@ export async function POST(request: NextRequest) {
   }
 
   try {
-    const { name, email, password } = await request.json();
-    const normalizedName = String(name ?? "").trim();
-    const normalizedEmail = String(email ?? "").trim().toLowerCase();
-    const normalizedPassword = String(password ?? "");
+    const body = await request.json();
+    const name = body?.name;
+    const email = body?.email;
+    const password = body?.password;
+
+    if (!name || !email || !password) {
+      return NextResponse.json(
+        { message: "Semua field wajib diisi" },
+        { status: 400 }
+      );
+    }
+
+    const normalizedName = String(name).trim();
+    const normalizedEmail = String(email).trim().toLowerCase();
+    const normalizedPassword = String(password);
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!normalizedName || normalizedName.length < 2) {
+    if (normalizedName.length < 2) {
       return NextResponse.json(
         { message: "Nama minimal 2 karakter" },
         { status: 400 }
       );
     }
 
-    if (!normalizedEmail || !emailRegex.test(normalizedEmail)) {
+    if (!emailRegex.test(normalizedEmail)) {
       return NextResponse.json(
         { message: "Format email tidak valid" },
         { status: 400 }
       );
     }
 
-    if (!normalizedPassword || normalizedPassword.length < 6) {
+    if (normalizedPassword.length < 6) {
       return NextResponse.json(
         { message: "Password minimal 6 karakter" },
         { status: 400 }

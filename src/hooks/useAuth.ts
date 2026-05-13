@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/supabase-browser";
 
 export interface Profile {
@@ -31,6 +31,7 @@ export function useAuth() {
   });
 
   const supabase = createSupabaseBrowserClient();
+  const initializedRef = useRef(false);
 
   const fetchProfile = useCallback(async (userId: string) => {
     const { data } = await supabase
@@ -39,26 +40,11 @@ export function useAuth() {
       .eq("id", userId)
       .single();
     return data as Profile | null;
-  }, [supabase]);
+  }, []); // Remove supabase from deps to prevent recreation
 
   const loadUser = useCallback(async () => {
     setAuthState((prev) => ({ ...prev, loading: true }));
     try {
-      // First try getSession (checks cookies)
-      const { data: sessionData } = await supabase.auth.getSession();
-      
-      if (sessionData?.session?.user) {
-        const profile = await fetchProfile(sessionData.session.user.id);
-        setAuthState({
-          user: sessionData.session.user,
-          profile,
-          loading: false,
-          ready: true,
-        });
-        return;
-      }
-
-      // Fallback to getUser (validates token with server)
       const {
         data: { user },
       } = await supabase.auth.getUser();
@@ -74,15 +60,34 @@ export function useAuth() {
       console.error("useAuth loadUser error:", error);
       setAuthState({ user: null, profile: null, loading: false, ready: true });
     }
-  }, [supabase, fetchProfile]);
+  }, [fetchProfile]); // Remove supabase from deps
 
   useEffect(() => {
+    if (initializedRef.current) return;
+    initializedRef.current = true;
+
+    const syncSession = async () => {
+      try {
+        await supabase.auth.refreshSession();
+      } catch {}
+    };
+    syncSession();
+
     loadUser();
 
     const {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
+        const profile = await fetchProfile(session.user.id);
+        setAuthState({
+          user: session.user,
+          profile,
+          loading: false,
+          ready: true,
+        });
+      } else if (event === "TOKEN_REFRESHED" && session?.user) {
+        // Reload user data when token is refreshed (after login)
         const profile = await fetchProfile(session.user.id);
         setAuthState({
           user: session.user,
@@ -98,7 +103,8 @@ export function useAuth() {
     return () => {
       subscription.unsubscribe();
     };
-  }, [supabase, loadUser, fetchProfile]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []); // Only run once on mount
 
   const logout = useCallback(async () => {
     await fetch("/api/auth/logout", { method: "POST" });
