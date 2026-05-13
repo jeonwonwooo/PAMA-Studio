@@ -2,25 +2,30 @@ import { NextResponse } from "next/server";
 import type { NextRequest } from "next/server";
 
 const PROTECTED_PATHS = ["/dashboard-client", "/admin"];
-const AUTH_PATHS = ["/admin"];
 
-export function middleware(request: NextRequest) {
+export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
 
   const isProtected = PROTECTED_PATHS.some((path) => pathname.startsWith(path));
-  const isAuthPath = AUTH_PATHS.some((path) => pathname.startsWith(path));
+  if (!isProtected) return NextResponse.next();
 
-  if (!isProtected) {
-    return NextResponse.next();
+  // Cek cookie Supabase SSR — formatnya sb-<project-ref>-auth-token
+  const allCookies = request.cookies.getAll();
+  const authCookie = allCookies.find(
+    (c) => c.name.startsWith("sb-") && c.name.endsWith("-auth-token")
+  );
+
+  if (!authCookie?.value) {
+    return NextResponse.redirect(new URL("/", request.url));
   }
 
-  const accessToken = request.cookies.get("sb-access-token")?.value;
-  const refreshToken = request.cookies.get("sb-refresh-token")?.value;
-
-  if (!accessToken && !refreshToken) {
-    if (isAuthPath) {
+  // Validasi value-nya bukan string kosong atau invalid
+  try {
+    const parsed = JSON.parse(authCookie.value);
+    if (!parsed?.access_token) {
       return NextResponse.redirect(new URL("/", request.url));
     }
+  } catch {
     return NextResponse.redirect(new URL("/", request.url));
   }
 
