@@ -1,16 +1,36 @@
 "use client";
 // Touch file to resolve casing warning
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState } from "react";
 import Image from "next/image";
 import { X, Mail, Lock, User, Eye, EyeOff, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
+import { useAuthRedirect, type AuthRedirectType } from "@/hooks/useAuthRedirect";
 import { createSupabaseBrowserClient } from "@/lib/supabase/supabase-browser";
 
 type Mode = "login" | "register";
 
-export default function AuthModal({ isOpen, onClose, title, subtitle }: { isOpen: boolean; onClose: () => void; title?: string; subtitle?: string }) {
+interface AuthModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  title?: string;
+  subtitle?: string;
+  redirectType?: AuthRedirectType;
+  packageId?: string;
+  onAuthSuccess?: () => void;
+}
+
+export default function AuthModal({
+  isOpen,
+  onClose,
+  title,
+  subtitle,
+  redirectType = "landing",
+  packageId,
+  onAuthSuccess,
+}: AuthModalProps) {
   const router = useRouter();
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+  const { handleAuthSuccess, clearLoginIntent } = useAuthRedirect();
+  const supabase = createSupabaseBrowserClient();
 
   const [mode, setMode] = useState<Mode>("login");
   const [showPassword, setShowPassword] = useState(false);
@@ -75,10 +95,36 @@ export default function AuthModal({ isOpen, onClose, title, subtitle }: { isOpen
       throw new Error(data.message || "Email atau password salah.");
     }
 
+    if (data.session?.access_token && data.session?.refresh_token) {
+      await supabase.auth.setSession({
+        access_token: data.session.access_token,
+        refresh_token: data.session.refresh_token,
+      });
+    }
+
     const role = data.profile?.role || "client";
 
+    if (role === "admin") {
+      onClose();
+      router.push("/admin");
+      router.refresh();
+      return;
+    }
+
     onClose();
-    router.push(role === "admin" ? "/admin" : "/paket");
+    clearLoginIntent();
+
+    // Use callback if provided (PackageCard provides this)
+    if (onAuthSuccess) {
+      onAuthSuccess();
+      return;
+    }
+
+    const target = redirectType === "checkout" && packageId
+      ? `/checkout?packageId=${packageId}`
+      : "/dashboard-client";
+
+    router.replace(target);
     router.refresh();
   };
 
@@ -111,7 +157,7 @@ export default function AuthModal({ isOpen, onClose, title, subtitle }: { isOpen
 
       <div className="relative w-full max-w-3xl overflow-hidden rounded-[32px] border border-white/30 bg-white/90 shadow-2xl backdrop-blur-xl flex flex-col lg:flex-row">
         <div className="relative hidden lg:block lg:w-[40%]">
-          <Image src="/images/foto6.jpg" alt="PAMA" fill className="object-cover" />
+          <Image src="/images/foto6.webp" alt="PAMA" fill className="object-cover" />
           <div className="absolute inset-0 bg-gradient-to-t from-black to-transparent opacity-60" />
         </div>
 

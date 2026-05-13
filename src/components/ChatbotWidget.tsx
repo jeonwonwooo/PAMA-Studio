@@ -4,6 +4,15 @@ import Script from 'next/script';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import { MessageCircle } from 'lucide-react';
+import { buildWhatsAppLink } from '@/lib/whatsapp';
+
+type FlowiseChatbot = {
+  init: (config: {
+    chatflowid: string;
+    apiHost: string;
+    theme: Record<string, unknown>;
+  }) => void;
+};
 
 const ChatbotWidget = () => {
   const [isError, setIsError] = useState(false);
@@ -11,7 +20,6 @@ const ChatbotWidget = () => {
   const FLOWISE_CHATFLOW_ID = process.env.NEXT_PUBLIC_FLOWISE_CHATFLOW_ID;
   const FLOWISE_API_HOST = process.env.NEXT_PUBLIC_FLOWISE_API_HOST;
 
-  const WA_ADMIN = process.env.NEXT_PUBLIC_WA_ADMIN || "6282331555431";
   // Don't show chatbot on admin pages
   if (pathname?.startsWith('/admin') || pathname?.startsWith('/checkout')) {
     return null;
@@ -24,7 +32,7 @@ const ChatbotWidget = () => {
       type="module"
       strategy="afterInteractive"
       onLoad={() => {
-        const bot = (window as any).Chatbot;
+        const bot = (window as Window & { Chatbot?: FlowiseChatbot }).Chatbot;
 
         if (!bot) {
           console.error("Terjadi kesalahan, hubungi admin.");
@@ -119,7 +127,7 @@ const ChatbotWidget = () => {
     />
     {isError && (
       <a
-        href={`https://wa.me/${WA_ADMIN}?text=${encodeURIComponent("Halo, saya butuh bantuan dari PAMA Studio.")}`}
+        href={buildWhatsAppLink("Halo, saya butuh bantuan dari PAMA Studio.")}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-[25px] right-[25px] z-[9999] flex h-[60px] w-[60px] items-center justify-center rounded-full bg-[#25D366] text-white shadow-lg transition-all hover:scale-110 active:scale-95"

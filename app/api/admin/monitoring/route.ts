@@ -9,7 +9,6 @@ export async function GET() {
   }
 
   const supabase = await createSupabaseServerClient();
-  const { count: totalUsers } = await supabase.from("profiles").select("id", { count: "exact", head: true });
   const { count: totalOrders } = await supabase.from("orders").select("id", { count: "exact", head: true });
   const { data: recentOrders } = await supabase.from("orders").select("id, created_at").order("created_at", { ascending: false }).limit(10);
 

@@ -41,7 +41,6 @@ const defaultTestimonials: Testimonial[] = [
 
 const Testimonials: React.FC = () => {
   const [testimonials, setTestimonials] = useState<Testimonial[]>(defaultTestimonials);
-  const [loading, setLoading] = useState(true);
   const [active, setActive] = useState(0);
 
   useEffect(() => {
@@ -56,8 +55,6 @@ const Testimonials: React.FC = () => {
         }
       } catch (error) {
         console.error("Failed to fetch testimonials:", error);
-      } finally {
-        setLoading(false);
       }
     };
 

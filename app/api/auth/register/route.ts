@@ -4,7 +4,7 @@ import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
 export async function POST(request: NextRequest) {
   const ip = getClientIp(request);
-  const { success, remaining, resetAt } = rateLimit(ip);
+  const { success, resetAt } = rateLimit(ip);
   const retryAfter = Math.ceil((resetAt - Date.now()) / 1000);
 
   if (!success) {

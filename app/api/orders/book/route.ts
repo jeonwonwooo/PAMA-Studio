@@ -5,6 +5,15 @@ function addMinutes(date: Date, minutes: number) {
   return new Date(date.getTime() + minutes * 60_000);
 }
 
+function parseSlotStart(date: string, time: string) {
+  const match = time.match(/^(\d{2})\.(\d{2})-(\d{2})\.(\d{2})$/);
+  if (!match) return null;
+
+  const startTime = `${match[1]}:${match[2]}`;
+  const startAt = new Date(`${date}T${startTime}:00+07:00`);
+  return Number.isNaN(startAt.getTime()) ? null : startAt;
+}
+
 export async function POST(request: Request) {
   const supabase = await createSupabaseServerClient();
 
@@ -15,15 +24,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
     }
 
-    // 2. Parsing Body — slot_id tidak dikirim dari frontend
+    // 2. Parsing Body
     const body = await request.json().catch(() => ({}));
-const { packageId, date, time, notes, addons = [] } = body;
+    const { packageId, date, time, notes, addons = [] } = body;
 
-  const sanitizedNotes = notes
-    ? notes.replace(/<[^>]*>/g, "").trim().slice(0, 500)
-    : null;
+    const sanitizedNotes = notes
+      ? notes.replace(/<[^>]*>/g, "").trim().slice(0, 500)
+      : null;
 
-  if (!packageId) {
+    if (!packageId) {
       return NextResponse.json({ message: "packageId required" }, { status: 400 });
     }
 
@@ -39,7 +48,6 @@ const { packageId, date, time, notes, addons = [] } = body;
     }
 
     const duration = pkg.duration_minutes ?? 0;
-    let resourceId: string | null = null;
 
     // 4. Validasi tanggal & jam
     if (duration > 0) {
@@ -47,19 +55,30 @@ const { packageId, date, time, notes, addons = [] } = body;
         return NextResponse.json({ message: "Date and time required" }, { status: 400 });
       }
 
-      const { data: pr } = await supabase
-        .from("package_resources")
-        .select("resource_id")
+      const startAt = parseSlotStart(date, time);
+      if (!startAt) {
+        return NextResponse.json({ message: "Format tanggal/waktu tidak valid" }, { status: 400 });
+      }
+
+      // Cek duplikasi order
+      const { data: existingOrder, error: duplicateErr } = await supabase
+        .from("orders")
+        .select("id")
         .eq("package_id", packageId)
+        .eq("scheduled_at", startAt.toISOString())
+        .in("status", ["pending", "awaiting_payment", "paid", "scheduled", "in_progress"])
         .maybeSingle();
 
-      if (!pr?.resource_id) {
-        return NextResponse.json({ message: "No resource available for this package" }, { status: 400 });
+      if (duplicateErr) {
+        return NextResponse.json({ message: "Gagal memeriksa booking ganda" }, { status: 500 });
       }
-      resourceId = pr.resource_id;
+
+      if (existingOrder?.id) {
+        return NextResponse.json({ ok: true, orderId: existingOrder.id, duplicate: true });
+      }
     }
 
-    // 5. Buat Order Awal
+    // 5. Buat Order
     const { data: order, error: orderErr } = await supabase
       .from("orders")
       .insert({
@@ -78,13 +97,24 @@ const { packageId, date, time, notes, addons = [] } = body;
       return NextResponse.json({ message: "Failed to create order: " + orderErr?.message }, { status: 500 });
     }
 
-    // --- PROSES LANJUTAN (Try/Catch untuk Rollback) ---
+    // --- PROSES LANJUTAN ---
     try {
       let addonsTotal = 0;
 
       // 6. Handle Addons
       if (addons.length > 0) {
-        const addonIds = addons.map((a: any) => a.addonId);
+        const parsedAddons = addons
+          .map((a: any) => ({
+            addonId: String(a?.addonId ?? "").trim(),
+            qty: Number(a?.qty ?? 1),
+          }))
+          .filter((a: any) => a.addonId);
+
+        if (parsedAddons.some((a: any) => !Number.isInteger(a.qty) || a.qty < 1 || a.qty > 10)) {
+          return NextResponse.json({ message: "Qty addon harus antara 1 sampai 10" }, { status: 400 });
+        }
+
+        const addonIds = parsedAddons.map((a: any) => a.addonId);
         const { data: addonRows, error: addonErr } = await supabase
           .from("addons")
           .select("id, price_idr")
@@ -93,14 +123,14 @@ const { packageId, date, time, notes, addons = [] } = body;
         if (addonErr) throw new Error("Addon error: " + addonErr.message);
 
         const priceMap = new Map(addonRows?.map((r) => [r.id, r.price_idr]) ?? []);
-        const rows = addons.map((a: any) => {
+        const rows = parsedAddons.map((a: any) => {
           const price = priceMap.get(a.addonId);
           if (price === undefined) throw new Error(`Invalid addonId: ${a.addonId}`);
-          addonsTotal += price * (a.qty ?? 1);
+          addonsTotal += price * a.qty;
           return {
             order_id: order.id,
             addon_id: a.addonId,
-            qty: a.qty ?? 1,
+            qty: a.qty,
             price_idr: price,
           };
         });
@@ -118,28 +148,19 @@ const { packageId, date, time, notes, addons = [] } = body;
 
       if (updErr) throw updErr;
 
-      // 8. Insert Booking — slot_id null karena sudah nullable
-      if (duration > 0 && resourceId) {
-        const timeStart = time.split("-")[0].replace(".", ":");
-        const startAt = new Date(`${date}T${timeStart}:00+07:00`);
-        if (isNaN(startAt.getTime())) throw new Error("Format tanggal/waktu tidak valid");
+      // Simpan jadwal langsung di order
+      if (duration > 0) {
+        const startAt = parseSlotStart(date, time);
+        if (!startAt) throw new Error("Format tanggal/waktu tidak valid");
 
-        const endAt = addMinutes(startAt, duration);
-        const timeRange = `[${startAt.toISOString()},${endAt.toISOString()})`;
-
-        await supabase
+        const { error: scheduleErr } = await supabase
           .from("orders")
           .update({ scheduled_at: startAt.toISOString() })
           .eq("id", order.id);
 
-        const { error: bookErr } = await supabase.from("bookings").insert({
-          order_id: order.id,
-          time_range: timeRange,
-          // slot_id nullable, tidak dikirim
-        });
-
-        if (bookErr) throw new Error("Slot sudah terisi atau error sistem: " + bookErr.message);
+        if (scheduleErr) throw new Error("Gagal simpan jadwal: " + scheduleErr.message);
       }
+
       return NextResponse.json({ ok: true, orderId: order.id });
 
     } catch (innerError: any) {

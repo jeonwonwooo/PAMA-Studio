@@ -1,7 +1,7 @@
 "use client";
 
-import React, { useEffect, useState, useCallback } from "react";
-import { Bell, ShoppingBag, Clock, CheckCheck, Loader2, CheckCircle, AlertTriangle } from "lucide-react";
+import React, { useEffect, useState } from "react";
+import { Bell, ShoppingBag, Clock, CheckCheck, Loader2 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
 

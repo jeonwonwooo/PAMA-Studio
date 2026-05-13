@@ -2,7 +2,6 @@
 
 import React, { useEffect, useState } from "react";
 import Image from "next/image";
-import Link from "next/link";
 import { ChevronRight } from "lucide-react";
 import { useInView } from "../../hooks/useInView";
 
@@ -50,7 +49,7 @@ const BestSeller: React.FC = () => {
       price: 0,
       priceFormatted: "Pas Foto",
       features: ["1 Orang", "30 menit sesi", "15 foto edit", "2 wardrobe"],
-      image: "/images/pasfoto.jpg",
+      image: "/images/pasfoto.webp",
       featured: false,
       tag: "Paling Populer",
     },
@@ -61,7 +60,7 @@ const BestSeller: React.FC = () => {
       price: 0,
       priceFormatted: "Duo",
       features: ["1-2 Orang", "10 menit sesi", "1 Print 4R"],
-      image: "/images/duo.jpg",
+      image: "/images/duo.webp",
       featured: true,
       tag: "Favorit Couple",
     },
@@ -72,7 +71,7 @@ const BestSeller: React.FC = () => {
       price: 0,
       priceFormatted: "Basic",
       features: ["1-3 Orang", "15 menit sesi", "1 Print 4R"],
-      image: "/images/basic.jpg",
+      image: "/images/basic.webp",
       featured: false,
       tag: "Terlaris Grup",
     },

@@ -281,7 +281,7 @@ const Navbar: React.FC = () => {
         </div>
       </header>
 
-      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} />
+      <AuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} redirectType="landing" />
     </>
   );
 };

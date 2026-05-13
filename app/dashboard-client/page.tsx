@@ -3,16 +3,15 @@
 import React, { useEffect, useState } from "react";
 import {
   Package, Clock, CheckCircle2, ChevronRight, LayoutDashboard,
-  AlertCircle, MessageCircle, X, Receipt, Loader2,
+  AlertCircle, MessageCircle, X, Receipt,
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 import { useAuth } from "@/hooks/useAuth";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 const OrderDetailModal = ({ order, isOpen, onClose }: any) => {
   if (!isOpen || !order) return null;
-
-  const WA_ADMIN = process.env.NEXT_PUBLIC_WA_ADMIN || "6282331555431";
   const handleWhatsApp = () => {
     const text = `Halo PAMA Studio! Saya ingin konfirmasi pesanan:
 
@@ -22,7 +21,7 @@ const OrderDetailModal = ({ order, isOpen, onClose }: any) => {
 *Total:* Rp ${new Intl.NumberFormat("id-ID").format(order.total_price_idr)}
 
 Mohon instruksi selanjutnya.`;
-    window.open(`https://wa.me/${WA_ADMIN}?text=${encodeURIComponent(text)}`, "_blank");
+  window.open(buildWhatsAppLink(text), "_blank", "noopener,noreferrer");
   };
 
   return (
@@ -99,7 +98,7 @@ Mohon instruksi selanjutnya.`;
 };
 
 export default function ClientDashboard() {
-  const { profile, ready } = useAuth();
+  const { profile } = useAuth();
   const [orders, setOrders] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [selectedOrder, setSelectedOrder] = useState<any>(null);

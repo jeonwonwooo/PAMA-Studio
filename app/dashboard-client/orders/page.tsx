@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  ShoppingBag, Search, Filter, Calendar, ChevronRight, Loader2, Package, AlertCircle, Plus
+  ShoppingBag, Search, Filter, Calendar, ChevronRight, Plus
 } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";

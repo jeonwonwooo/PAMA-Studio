@@ -24,7 +24,6 @@ import Navbar from "../../src/components/layout/Navbar";
 import Footer from "../../src/components/layout/Footer";
 import CheckoutAuthModal from "../../src/components/ui/AuthModal";
 import SuccessModal from "../../src/components/ui/SuccessModal";
-import { createSupabaseBrowserClient } from "@/lib/supabase/supabase-browser";
 
 type PackageRow = {
   id: string;
@@ -51,6 +50,22 @@ type SlotInfo = {
   available: boolean;
 };
 
+type UserData = {
+  email?: string;
+  profile?: { full_name?: string | null };
+  user_metadata?: { full_name?: string | null };
+};
+
+type OrderResult = {
+  id: string;
+  userName: string;
+  userEmail: string;
+  packageName: string;
+  totalPrice: number;
+  date: string;
+  time: string;
+};
+
 function formatIDR(n: number) {
   return "Rp " + new Intl.NumberFormat("id-ID").format(n);
 }
@@ -75,16 +90,15 @@ export default function CheckoutContent() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const packageId = searchParams.get("packageId");
-
-  const supabase = useMemo(() => createSupabaseBrowserClient(), []);
+  const isValidPackageId = !!packageId && /^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(packageId);
 
   const [sessionReady, setSessionReady] = useState(false);
   const [isAuthed, setIsAuthed] = useState(false);
   const [authOpen, setAuthOpen] = useState(false);
-  const [userData, setUserData] = useState<any>(null);
+  const [userData, setUserData] = useState<UserData | null>(null);
 
   const [isModalOpen, setIsModalOpen] = useState(false);
-  const [orderResult, setOrderResult] = useState<any>(null);
+  const [orderResult, setOrderResult] = useState<OrderResult | null>(null);
 
   const [pkg, setPkg] = useState<PackageRow | null>(null);
   const [addons, setAddons] = useState<AddonRow[]>([]);
@@ -127,6 +141,12 @@ export default function CheckoutContent() {
         return;
       }
 
+      if (!isValidPackageId) {
+        setErr("Paket tidak valid.");
+        setLoadingData(false);
+        return;
+      }
+
       setLoadingData(true);
       setErr("");
 
@@ -159,7 +179,7 @@ export default function CheckoutContent() {
       }
     };
     run();
-  }, [packageId]);
+  }, [packageId, isValidPackageId]);
 
   const loadAvailability = useCallback(async () => {
     if (!packageId || !pkg) return;
@@ -184,7 +204,7 @@ export default function CheckoutContent() {
         setErr(data?.message ?? "Gagal load jam tersedia");
         return;
       }
-      setAvailableSlots(data.available ?? []);
+      setAvailableSlots((data.slots ?? data.available ?? []) as SlotInfo[]);
       setIntervalInfo(data.interval ? `Interval ${data.interval} menit` : "");
     } catch {
       setErr("Gagal load jam tersedia");
@@ -224,11 +244,17 @@ export default function CheckoutContent() {
     };
 
     init();
-  }, [pkg?.duration_minutes, loadAvailability]);
+  }, [loadAvailability]);
 
   useEffect(() => {
     if (pkg && needsSlot) loadAvailability();
   }, [pkg, needsSlot, date, loadAvailability]);
+
+  useEffect(() => {
+    if (packageId && !isValidPackageId) {
+      router.replace("/paket");
+    }
+  }, [packageId, isValidPackageId, router]);
 
   const toggleAddon = (addonId: string, checked: boolean) => {
     setSelectedAddons((prev) => {
@@ -320,8 +346,18 @@ export default function CheckoutContent() {
 
   return (
     <div className="min-h-screen bg-[#FBF7F1] text-[#1a0505]">
-      <CheckoutAuthModal isOpen={authOpen} onClose={() => setAuthOpen(false)} title="Login untuk lanjut booking" subtitle="Masuk dulu biar kamu bisa pilih jadwal dan pesananmu tersimpan." />
-      <SuccessModal isOpen={isModalOpen} data={orderResult} onClose={() => { setIsModalOpen(false); router.push("/dashboard-client"); }} />
+      <CheckoutAuthModal
+        isOpen={authOpen}
+        onClose={() => {
+          setAuthOpen(false);
+          router.push("/paket");
+        }}
+        title="Login untuk lanjut booking"
+        subtitle="Masuk dulu biar kamu bisa pilih jadwal dan pesananmu tersimpan."
+        redirectType="checkout"
+        packageId={packageId ?? undefined}
+      />
+      <SuccessModal isOpen={isModalOpen} data={orderResult} onClose={() => { setIsModalOpen(false); router.push("/dashboard-client"); router.refresh(); }} />
 
       <Navbar />
 
@@ -362,7 +398,7 @@ export default function CheckoutContent() {
                 {/* Package Card */}
                 <div className="overflow-hidden rounded-[32px] border border-[#8B1A1A]/10 bg-white shadow-sm">
                   <div className="relative h-48 w-full bg-gradient-to-br from-[#8B1A1A] to-[#5C0E0E]">
-                    <Image src="/images/foto-pama.jpg" alt={pkg.title} fill className="object-cover opacity-40 mix-blend-overlay" unoptimized />
+                    <Image src="/images/foto-pama.webp" alt={pkg.title} fill className="object-cover opacity-40 mix-blend-overlay" unoptimized />
                     <div className="absolute inset-0 flex flex-col justify-end p-6">
                       <div className="flex items-center gap-2 mb-2">
                         {studioBadge && (

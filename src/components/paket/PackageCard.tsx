@@ -3,26 +3,48 @@
 import React, { useState } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { ChevronDown, ChevronUp, Eye, ArrowRight, Check, Sparkles } from "lucide-react";
+import { Eye, ArrowRight, Check, Sparkles } from "lucide-react";
 import { useInView } from "../../hooks/useInView"; // Sesuaikan path
 import GalleryModal from "./GalleryModal";
+import AuthModal from "../ui/AuthModal";
+import { useAuth } from "@/hooks/useAuth";
+import { useRouter } from "next/navigation";
 
 /* ── Types ── */
 export interface SubPackage { name: string; description: string; price: string; }
 export interface AdditionalItem { name: string; price: string; }
 export interface PackageData {
-  id: string; title: string; subtitle: string; description: string;
+  id: string; packageId: string; title: string; subtitle: string; description: string;
   image: string; galleryImages: string[]; subPackages: SubPackage[];
   additionals?: AdditionalItem[]; features?: string[];
   ctaLabel: string; ctaLink: string; accent?: "maroon" | "dark" | "warm";
 }
 
 const PackageCard: React.FC<{ data: PackageData; index: number }> = ({ data, index }) => {
-  const [accordionOpen, setAccordionOpen] = useState(false); // Default open di Desktop
   const [galleryOpen, setGalleryOpen] = useState(false);
+  const [authOpen, setAuthOpen] = useState(false);
+  const [selectedPackageId, setSelectedPackageId] = useState<string | null>(null);
   const { ref, inView } = useInView({ threshold: 0.08 });
+  const { user, ready } = useAuth();
+  const router = useRouter();
 
   const isEven = index % 2 === 0;
+
+  const handleBookingClick = (e: React.MouseEvent<HTMLAnchorElement | HTMLButtonElement>, packageId: string) => {
+    if (ready && !user) {
+      e.preventDefault();
+      setSelectedPackageId(packageId);
+      setAuthOpen(true);
+    }
+    // If user is already logged in, let the Link navigate naturally
+  };
+
+  const handleAuthSuccess = () => {
+    setAuthOpen(false);
+    if (selectedPackageId) {
+      window.location.href = `/checkout?packageId=${selectedPackageId}`;
+    }
+  };
 
   return (
     <>
@@ -95,70 +117,45 @@ const PackageCard: React.FC<{ data: PackageData; index: number }> = ({ data, ind
             )}
 
             {/* ── Layout Bersebelahan: Sub Paket & Additional ── */}
-            <div className="mt-8 grid grid-cols-1 gap-8 xl:grid-cols-2 flex-1">
-              
-              {/* Kolom Kiri: Sub Paket */}
-              {data.subPackages.length > 0 && (
-                <div className="flex flex-col">
-                  <button onClick={() => setAccordionOpen(!accordionOpen)} className="flex h-[52px] w-full items-center justify-between border-b border-[#8B1A1A]/10">
-                    <span className="text-lg font-semibold text-[#1a0505]" style={{ fontFamily: "Fraunces, serif" }}>Pilihan Paket</span>
-                    <div className="flex h-7 w-7 items-center justify-center rounded-full border border-[#8B1A1A]/20 text-[#8B1A1A] transition hover:bg-[#8B1A1A]/5">
-                      {accordionOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                    </div>
-                  </button>
+            <div className="mt-8 space-y-6">
 
-                  <div className="overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]" style={{ maxHeight: accordionOpen ? "1000px" : "0px", opacity: accordionOpen ? 1 : 0 }}>
-                    <div className="mt-4 space-y-3">
-                      {data.subPackages.map((sub, si) => (
-                        <div key={si} className="flex items-center justify-between rounded-xl border border-[#8B1A1A]/8 bg-gradient-to-r from-[#FBF7F1] to-[#FFF8E7] p-3.5 transition hover:border-[#8B1A1A]/20">
-                          <div>
-                            <h4 className="text-sm font-semibold text-[#1a0505]" style={{ fontFamily: "Fraunces, serif" }}>{sub.name}</h4>
-                            <p className="mt-0.5 text-[11px] text-[#3a1a1a]/60 leading-tight" style={{ fontFamily: "Inter Tight, sans-serif" }}>{sub.description}</p>
-                          </div>
-                          <div className="ml-3 shrink-0 text-right text-[15px] font-semibold text-[#8B1A1A]" style={{ fontFamily: "Fraunces, serif" }}>
-                            {sub.price}
-                          </div>
+              {data.subPackages.length > 0 && (
+                <div>
+                  <h4 className="mb-4 text-lg font-semibold text-[#1a0505]" style={{ fontFamily: "Fraunces, serif" }}>Varian & Harga</h4>
+                  <div className="space-y-3">
+                    {data.subPackages.map((sub, si) => (
+                      <div key={si} className="flex items-center justify-between rounded-xl border border-[#8B1A1A]/8 bg-gradient-to-r from-[#FBF7F1] to-[#FFF8E7] p-4 transition hover:border-[#8B1A1A]/20">
+                        <div>
+                          <h5 className="text-sm font-semibold text-[#1a0505]" style={{ fontFamily: "Fraunces, serif" }}>{sub.name}</h5>
+                          <p className="mt-0.5 text-[11px] text-[#3a1a1a]/60 leading-tight" style={{ fontFamily: "Inter Tight, sans-serif" }}>{sub.description}</p>
                         </div>
-                      ))}
-                    </div>
+                        <div className="ml-4 shrink-0 text-right">
+                          <div className="text-[15px] font-semibold text-[#8B1A1A]" style={{ fontFamily: "Fraunces, serif" }}>{sub.price}</div>
+                          <Link
+                            href={`/checkout?packageId=${encodeURIComponent(data.packageId)}`}
+                            onClick={(e) => handleBookingClick(e, data.packageId)}
+                            className="mt-2 inline-flex items-center gap-1.5 rounded-full bg-[#8B1A1A] px-4 py-2 text-[11px] font-semibold uppercase tracking-wider text-white transition hover:bg-[#6B1212]"
+                            style={{ fontFamily: "Inter Tight, sans-serif" }}
+                          >
+                            Booking <ArrowRight className="h-3 w-3" />
+                          </Link>
+                        </div>
+                      </div>
+                    ))}
                   </div>
                 </div>
               )}
 
-              {/* Kolom Kanan: Additional & CTA */}
-              <div className="flex flex-col justify-between h-full space-y-6">
-  {data.additionals && data.additionals.length > 0 && (
-    <div>
-      <h4 className="flex h-[52px] items-center text-xs font-semibold uppercase tracking-[0.15em] text-[#8B1A1A] border-b border-[#8B1A1A]/10">
-        Layanan Additional
-      </h4>
-      <div
-        className="overflow-hidden transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)]"
-        style={{ maxHeight: accordionOpen ? "1000px" : "0px", opacity: accordionOpen ? 1 : 0 }}
-      >
-        <div className="mt-4 space-y-2">
-          {data.additionals.map((add, ai) => (
-            <div key={ai} className="flex items-center justify-between rounded-xl bg-[#8B1A1A]/5 px-3.5 py-2.5 transition hover:bg-[#8B1A1A]/10">
-              <span className="text-[13px] font-medium text-[#1a0505]" style={{ fontFamily: "Inter Tight, sans-serif" }}>{add.name}</span>
-              <span className="text-[13px] font-bold text-[#8B1A1A]" style={{ fontFamily: "Fraunces, serif" }}>{add.price}</span>
-            </div>
-          ))}
-        </div>
-      </div>
-    </div>
-  )}
-
-                {/* Tombol CTA selalu berada di ujung bawah kanan */}
-                <div className="mt-auto pt-4">
-                  <Link
-                    href={data.ctaLink}
-                    className="group/btn flex w-full items-center justify-center gap-2.5 rounded-full bg-[#8B1A1A] px-6 py-3.5 text-sm font-semibold text-white transition-all hover:bg-[#6B1212] hover:shadow-[0_10px_30px_-10px_rgba(139,26,26,0.5)]"
-                    style={{ fontFamily: "Inter Tight, sans-serif" }}
-                  >
-                    {data.ctaLabel}
-                    <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
-                  </Link>
-                </div>
+              <div className="pt-4">
+                <Link
+                  href={data.ctaLink}
+                  onClick={(e) => handleBookingClick(e, data.packageId)}
+                  className="group/btn flex w-full items-center justify-center gap-2.5 rounded-full bg-[#8B1A1A] px-6 py-4 text-sm font-semibold text-white transition-all hover:bg-[#6B1212] hover:shadow-[0_10px_30px_-10px_rgba(139,26,26,0.5)]"
+                  style={{ fontFamily: "Inter Tight, sans-serif" }}
+                >
+                  {data.ctaLabel}
+                  <ArrowRight className="h-4 w-4 transition-transform group-hover/btn:translate-x-1" />
+                </Link>
               </div>
             </div>
             
@@ -167,6 +164,15 @@ const PackageCard: React.FC<{ data: PackageData; index: number }> = ({ data, ind
       </div>
 
       <GalleryModal isOpen={galleryOpen} onClose={() => setGalleryOpen(false)} images={data.galleryImages} title={data.title} />
+      <AuthModal 
+        isOpen={authOpen} 
+        onClose={() => setAuthOpen(false)} 
+        title="Pesan Paket" 
+        subtitle="Login dulu untuk melanjutkan pemesanan paket pilihan kamu."
+        redirectType="package"
+        packageId={selectedPackageId ?? undefined}
+        onAuthSuccess={handleAuthSuccess}
+      />
     </>
   );
 };

@@ -2,6 +2,7 @@
 
 import React from "react";
 import { MapPin, Phone, Mail, Music2, Camera, ArrowUpRight } from "lucide-react";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 const Contact: React.FC = () => {
   return (
@@ -87,7 +88,7 @@ const Contact: React.FC = () => {
                   icon: <Phone className="h-4 w-4" />,
                   label: "WhatsApp",
                   value: "+62 823-3155-5431",
-                  link: "https://wa.me/6282331555431"
+                  link: buildWhatsAppLink("Halo PAMA Studio! Saya ingin tanya-tanya dulu.")
                 },
                 {
                   icon: <Music2 className="h-4 w-4" />,

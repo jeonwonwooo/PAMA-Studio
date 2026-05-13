@@ -44,6 +44,21 @@ export function useAuth() {
   const loadUser = useCallback(async () => {
     setAuthState((prev) => ({ ...prev, loading: true }));
     try {
+      // First try getSession (checks cookies)
+      const { data: sessionData } = await supabase.auth.getSession();
+      
+      if (sessionData?.session?.user) {
+        const profile = await fetchProfile(sessionData.session.user.id);
+        setAuthState({
+          user: sessionData.session.user,
+          profile,
+          loading: false,
+          ready: true,
+        });
+        return;
+      }
+
+      // Fallback to getUser (validates token with server)
       const {
         data: { user },
       } = await supabase.auth.getUser();

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Inter_Tight, Fraunces } from "next/font/google";
 import "./globals.css";
 import ChatbotWidget from '../src/components/ChatbotWidget';
+import { ToastProvider } from '@/contexts/ToastContext';
 
 const interTight = Inter_Tight({ 
   subsets: ["latin"],
@@ -57,10 +58,12 @@ export default function RootLayout({
   return (
     <html lang="id" className={`scroll-smooth ${interTight.variable} ${fraunces.variable}`}>
       <body className={`${interTight.className} antialiased`}>
-        {children}
-        
-        {/* ChatbotWidget muncul di semua page */}
-        <ChatbotWidget />
+        <ToastProvider>
+          {children}
+          
+          {/* ChatbotWidget muncul di semua page */}
+          <ChatbotWidget />
+        </ToastProvider>
       </body>
     </html>
   );

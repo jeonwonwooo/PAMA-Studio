@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useState } from 'react';
 import { supabase } from '@/lib/supabase';
 import { Plus, Edit2, Trash2, Save, X, Printer, Clock, Users, Layers } from 'lucide-react';
 
@@ -27,7 +27,7 @@ interface Package {
 
 export default function MasterDataPackages() {
   const [packages, setPackages] = useState<Package[]>([]);
-  const [loading, setLoading] = useState(true);
+  const [, setLoading] = useState(true);
   
   const initialFormState: Partial<Package> = {
     title: '',

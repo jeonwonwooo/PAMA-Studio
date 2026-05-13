@@ -89,7 +89,7 @@ const Hero: React.FC = () => {
           <div className="relative lg:col-span-5">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[28px] shadow-[0_30px_80px_-30px_rgba(90,15,15,0.5)]">
               <Image
-                src="/images/hero.jpg"
+                src="/images/hero.webp"
                 alt="PAMA Studio hero"
                 fill
                 priority

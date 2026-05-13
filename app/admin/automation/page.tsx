@@ -2,7 +2,7 @@
 
 import React, { useEffect, useState, useCallback } from "react";
 import { createSupabaseBrowserClient } from "@/lib/supabase/supabase-browser";
-import { Loader2, Sparkles, Bell, RefreshCw, CheckCircle2, XCircle, Clock } from "lucide-react";
+import { Loader2, Sparkles, Bell, RefreshCw, CheckCircle2, XCircle } from "lucide-react";
 import { motion } from "framer-motion";
 import Link from "next/link";
 

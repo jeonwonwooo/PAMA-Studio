@@ -1,5 +1,5 @@
 import { createSupabaseServerClient } from "./supabase/supabase-server";
-import { startOfDay, startOfWeek, startOfMonth, endOfDay, format } from "date-fns";
+import { startOfDay, startOfWeek, startOfMonth, format } from "date-fns";
 
 export type AnalyticsRange = "daily" | "weekly" | "monthly";
 

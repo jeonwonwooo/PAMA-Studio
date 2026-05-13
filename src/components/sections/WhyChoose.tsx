@@ -47,7 +47,7 @@ const WhyChoose: React.FC = () => {
           >
             <div className="relative aspect-[4/3] overflow-hidden rounded-[28px] shadow-[0_30px_80px_-30px_rgba(90,15,15,0.4)]">
               <Image
-                src="/images/foto-pama.jpg"
+                src="/images/foto-pama.webp"
                 alt="PAMA team"
                 fill
                 unoptimized

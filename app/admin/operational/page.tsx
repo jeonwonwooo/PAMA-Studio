@@ -1,9 +1,9 @@
 "use client";
 
-import React, { useEffect, useState, useCallback, useRef } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import {
-  RefreshCw, Download, ShoppingBag, Clock, ChevronDown, Check, Loader2,
-  Calendar, Users, ArrowRight,
+  RefreshCw, Download, Clock, ChevronDown, Check, Loader2,
+  Calendar,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";

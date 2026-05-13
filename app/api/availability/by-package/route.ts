@@ -73,8 +73,8 @@ export async function GET(req: NextRequest) {
     const intervalMinutes = getIntervalMinutes(pkg.type ?? "", pkg.title ?? "");
     const allSlots = generateAllSlots(durationMinutes, intervalMinutes);
 
-    const dayStart = `${date}T00:00:00.000Z`;
-    const dayEnd = `${date}T23:59:59.999Z`;
+    const dayStart = new Date(`${date}T00:00:00+07:00`).toISOString();
+    const dayEnd = new Date(`${date}T23:59:59.999+07:00`).toISOString();
 
     const { data: bookedOrders, error: ordersErr } = await supabase
       .from("orders")
@@ -89,7 +89,7 @@ export async function GET(req: NextRequest) {
 
     const packageIds = [...new Set((bookedOrders ?? []).map((o: any) => o.package_id))];
 
-    let packageDurations: Record<string, number> = {};
+    const packageDurations: Record<string, number> = {};
     if (packageIds.length > 0) {
       const { data: pkgDurations } = await supabase
         .from("packages")
@@ -127,7 +127,13 @@ export async function GET(req: NextRequest) {
       };
     });
 
-    return NextResponse.json({ slots, interval: intervalMinutes });
+    const available = slots.filter((slot) => slot.available);
+
+    return NextResponse.json({
+      slots,
+      available,
+      interval: intervalMinutes,
+    });
   } catch (e: any) {
     return NextResponse.json({ message: e?.message ?? "Server error" }, { status: 500 });
   }

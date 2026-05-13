@@ -3,6 +3,9 @@ import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 
 export async function POST() {
   const supabase = await createSupabaseServerClient();
+  
+  // Refresh session first to get latest cookies
+  await supabase.auth.refreshSession();
   const { error } = await supabase.auth.signOut();
 
   if (error) {

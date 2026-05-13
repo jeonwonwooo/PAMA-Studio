@@ -3,8 +3,8 @@
 import React, { useEffect, useState, useCallback } from "react";
 import {
   Globe, Database, Zap, Server, Users, Clock, AlertTriangle,
-  CheckCircle, XCircle, HardDrive, CreditCard, Mail, Cloud,
-  Activity, RefreshCw, Download, Wifi, Loader2, Package,
+  CheckCircle, XCircle, HardDrive, CreditCard, Mail,
+  Activity, RefreshCw, Download, Wifi, Loader2,
 } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { motion } from "framer-motion";
@@ -22,6 +22,14 @@ function formatBytes(bytes: number) {
 
 type LogEntry = { time: string; message: string; type: "info" | "warn" | "error" | "success" };
 type StatusItem = { label: string; status: "Online" | "Connected" | "Active" | "Stable" | "Error" | "Offline"; icon: React.ReactNode };
+type ApiStatusItem = { label: string; status: "Online" | "Connected" | "Active" | "Stable" | "Error" | "Offline"; icon: string };
+type MonitoringResponse = {
+  systemStatus: ApiStatusItem[];
+  performance: { usersOnline: number; responseTime: string; requestsToday: number; cpuUsage: number };
+  storage: { used: number; total: number; lastBackup?: string };
+  activityLogs: LogEntry[];
+  errorLogs: LogEntry[];
+};
 
 export default function MonitoringPage() {
   const router = useRouter();
@@ -30,6 +38,7 @@ export default function MonitoringPage() {
   const [lastUpdate, setLastUpdate] = useState("");
 
   const [systemStatus, setSystemStatus] = useState<StatusItem[]>([]);
+  const [apiStatus, setApiStatus] = useState<StatusItem[]>([]);
   const [activityLogs, setActivityLogs] = useState<LogEntry[]>([]);
   const [errorLogs, setErrorLogs] = useState<LogEntry[]>([]);
   const [perf, setPerf] = useState({
@@ -43,9 +52,19 @@ export default function MonitoringPage() {
     total: 12 * 1e12,
     lastBackup: "—",
   });
-  const [apiStatus, setApiStatus] = useState<StatusItem[]>([]);
+  const getIcon = (iconName: string): React.ReactNode => {
+    const icons: Record<string, React.ReactNode> = {
+      Database: <Database size={18} />,
+      Server: <Server size={18} />,
+      Users: <Users size={18} />,
+      Mail: <Mail size={18} />,
+      CreditCard: <CreditCard size={18} />,
+      HardDrive: <HardDrive size={18} />,
+    };
+    return icons[iconName] || <Globe size={18} />;
+  };
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     setLoading(true);
     setLastUpdate(timeNow());
     try {
@@ -54,14 +73,18 @@ export default function MonitoringPage() {
         console.error("Failed to fetch monitoring data");
         return;
       }
-      const data = await res.json();
+      const data: MonitoringResponse = await res.json();
 
-      setSystemStatus(data.systemStatus.map((item: any) => ({
+      setSystemStatus(data.systemStatus.map((item: ApiStatusItem) => ({
+        ...item,
+        icon: getIcon(item.icon),
+      })));
+      setApiStatus(data.systemStatus.map((item: ApiStatusItem) => ({
         ...item,
         icon: getIcon(item.icon),
       })));
       setPerf(data.performance);
-      setStorage(data.storage);
+      setStorage({ ...data.storage, lastBackup: data.storage.lastBackup ?? "—" });
       setActivityLogs(data.activityLogs);
       setErrorLogs(data.errorLogs);
     } catch (error) {
@@ -69,7 +92,7 @@ export default function MonitoringPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const checkAdmin = async () => {
@@ -93,19 +116,12 @@ export default function MonitoringPage() {
     };
 
     checkAdmin();
-  }, [router]);
+  }, [router, fetchData]);
 
-  const getIcon = (iconName: string) => {
-    const icons: Record<string, React.ReactNode> = {
-      Database: <Database size={18} />,
-      Server: <Server size={18} />,
-      Users: <Users size={18} />,
-      Mail: <Mail size={18} />,
-      CreditCard: <CreditCard size={18} />,
-      HardDrive: <HardDrive size={18} />,
-    };
-    return icons[iconName] || <Globe size={18} />;
-  };
+  useEffect(() => {
+    const interval = setInterval(fetchData, 30000);
+    return () => clearInterval(interval);
+  }, [fetchData]);
 
   if (!isAdmin) {
     return (
@@ -117,11 +133,6 @@ export default function MonitoringPage() {
       </div>
     );
   }
-
-  useEffect(() => {
-    const interval = setInterval(() => fetchData(), 30000);
-    return () => clearInterval(interval);
-  }, []);
 
   const statusColor = (s: string) => {
     if (["Online", "Connected", "Active", "Stable"].includes(s)) return "text-green-600";

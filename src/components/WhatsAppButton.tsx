@@ -1,13 +1,20 @@
 "use client";
 
 import { MessageCircle } from "lucide-react";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
 
-const WA_ADMIN = process.env.NEXT_PUBLIC_WA_ADMIN || "6282331555431";
+type WhatsAppButtonProps = {
+  orderData: {
+    id: string;
+    packages?: { title?: string | null } | null;
+    total_price_idr: number;
+  };
+};
 
-export default function WhatsAppButton({ orderData }: { orderData: any }) {
+export default function WhatsAppButton({ orderData }: WhatsAppButtonProps) {
   const handleWA = () => {
     const text = `Halo PAMA Studio! Saya ingin konfirmasi pembayaran:\n\n*Order ID:* #${orderData.id.slice(0, 8)}\n*Paket:* ${orderData.packages?.title}\n*Total:* Rp ${new Intl.NumberFormat("id-ID").format(orderData.total_price_idr)}\n\nMohon instruksi selanjutnya.`;
-    window.open(`https://wa.me/${WA_ADMIN}?text=${encodeURIComponent(text)}`, "_blank");
+    window.open(buildWhatsAppLink(text), "_blank", "noopener,noreferrer");
   };
 
   return (

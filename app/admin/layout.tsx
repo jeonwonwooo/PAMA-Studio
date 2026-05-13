@@ -5,11 +5,9 @@ import { usePathname, useRouter } from "next/navigation";
 import {
   LayoutDashboard,
   BarChart3,
-  Settings,
   Users,
   Clock,
   Monitor,
-  FileText,
   LogOut,
   Bell,
   Search,
@@ -34,17 +32,14 @@ const menuItems = [
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
-  const { user, profile, logout, ready } = useAuth();
-  const [isSearchOpen, setIsSearchOpen] = useState(false);
+  const { profile, logout, ready } = useAuth();
   const [isSidebarOpen, setSidebarOpen] = useState(false);
   const [currentTime, setCurrentTime] = useState("");
 
   useEffect(() => {
-    const updateTime = () => {
-      setCurrentTime(new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }));
-    };
-    updateTime();
-    const interval = setInterval(updateTime, 60000);
+    const update = () => setCurrentTime(new Date().toLocaleTimeString("id-ID", { hour: "2-digit", minute: "2-digit" }));
+    update();
+    const interval = setInterval(update, 1000);
     return () => clearInterval(interval);
   }, []);
 

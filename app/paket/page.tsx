@@ -6,23 +6,22 @@ import Footer from "../../src/components/layout/Footer";
 import PackageCard from "../../src/components/paket/PackageCard";
 import { createSupabaseServerClient } from "../../src/lib/supabase/supabase-server";
 import {  groupPackagesToCards } from "../../src/lib/packageCardAdapter";
+import { buildWhatsAppLink } from "../../src/lib/whatsapp";
 
-type FilterKey =
-  | "all"
-  | "studio_1"
-  | "studio_2"
-  | "studio_2_molding"
-  | "pas_foto"
-  | "photographer";
+type FilterKey = "all" | "self_photo" | "pas_foto" | "jasa_fotografer";
 
 const FILTERS: { key: FilterKey; label: string }[] = [
   { key: "all", label: "Semua" },
-  { key: "studio_1", label: "Self Photo Studio 1" },
-  { key: "studio_2", label: "Self Photo Studio 2" },
-  { key: "studio_2_molding", label: "Studio 2 Molding" },
+  { key: "self_photo", label: "Self Photo" },
   { key: "pas_foto", label: "Pas Foto" },
-  { key: "photographer", label: "Jasa Fotografer" },
+  { key: "jasa_fotografer", label: "Jasa Fotografer" },
 ];
+
+const PACKAGE_TYPE_MAP: Record<Exclude<FilterKey, "all">, "self_photo" | "pas_foto" | "jasa_fotografer"> = {
+  self_photo: "self_photo",
+  pas_foto: "pas_foto",
+  jasa_fotografer: "jasa_fotografer",
+};
 
 function PaketHeroSSR() {
   return (
@@ -75,7 +74,7 @@ function PaketHeroSSR() {
 
 function buildFilterHref(filter: FilterKey, page: number) {
   const params = new URLSearchParams();
-  if (filter !== "all") params.set("filter", filter);
+  if (filter !== "all") params.set("package_type", filter);
   if (page > 1) params.set("page", String(page));
   const qs = params.toString();
   return qs ? `/paket?${qs}` : "/paket";
@@ -84,10 +83,11 @@ function buildFilterHref(filter: FilterKey, page: number) {
 export default async function PaketPage({
   searchParams,
 }: {
-  searchParams: Promise<{ filter?: string; page?: string }>;
+  searchParams: Promise<{ filter?: string; package_type?: string; page?: string }>;
 }) {
   const sp = await searchParams;
-  const filter = (sp.filter as FilterKey) ?? "all";
+  const rawFilter = (sp.package_type ?? sp.filter ?? "all") as string;
+  const filter = (rawFilter === "photographer" ? "jasa_fotografer" : rawFilter) as FilterKey;
   const page = Math.max(1, Number(sp.page ?? "1") || 1);
 
   const pageSize = 4; // kamu bisa ubah: 3/4/5 sesuai taste
@@ -101,25 +101,8 @@ export default async function PaketPage({
     .eq("is_active", true);
 
   // apply filter
-  switch (filter) {
-    case "studio_1":
-      q = q.eq("type", "self_photo").ilike("title", "Studio 1%");
-      break;
-    case "studio_2":
-      q = q.eq("type", "self_photo").ilike("title", "Studio 2%").ilike("title", "%(Normal)%");
-      break;
-    case "studio_2_molding":
-      q = q.eq("type", "self_photo").ilike("title", "Studio 2%").ilike("title", "%(Molding)%");
-      break;
-    case "pas_foto":
-      q = q.eq("type", "pas_foto");
-      break;
-    case "photographer":
-      q = q.eq("type", "photographer");
-      break;
-    case "all":
-    default:
-      break;
+  if (filter !== "all") {
+    q = q.eq("type", PACKAGE_TYPE_MAP[filter]);
   }
 
   const { data, error } = await q
@@ -128,8 +111,9 @@ export default async function PaketPage({
 
   const allCards = groupPackagesToCards(Array.isArray(data) ? data : []);
   const total = allCards.length;
-  const from = (page - 1) * pageSize;
   const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const safePage = Math.min(page, totalPages);
+  const from = (safePage - 1) * pageSize;
   const cards = allCards.slice(from, from + pageSize);
 
   return (
@@ -191,7 +175,7 @@ export default async function PaketPage({
           <div className="flex items-center justify-center gap-2">
             <Link
               aria-disabled={page <= 1}
-              href={buildFilterHref(filter, Math.max(1, page - 1))}
+              href={buildFilterHref(filter, Math.max(1, safePage - 1))}
               className={[
                 "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition",
                 page <= 1
@@ -205,15 +189,15 @@ export default async function PaketPage({
             </Link>
 
             <div className="px-3 text-sm text-[#3a1a1a]/70" style={{ fontFamily: "Inter Tight, sans-serif" }}>
-              Page <b className="text-[#1a0505]">{page}</b> / {totalPages}
+              Page <b className="text-[#1a0505]">{safePage}</b> / {totalPages}
             </div>
 
             <Link
-              aria-disabled={page >= totalPages}
-              href={buildFilterHref(filter, Math.min(totalPages, page + 1))}
+              aria-disabled={safePage >= totalPages}
+              href={buildFilterHref(filter, Math.min(totalPages, safePage + 1))}
               className={[
                 "inline-flex items-center gap-2 rounded-full border px-4 py-2 text-sm font-semibold transition",
-                page >= totalPages
+                safePage >= totalPages
                   ? "pointer-events-none border-[#8B1A1A]/10 bg-white/40 text-[#8B1A1A]/40"
                   : "border-[#8B1A1A]/20 bg-white/70 text-[#8B1A1A] hover:bg-white",
               ].join(" ")}
@@ -237,7 +221,7 @@ export default async function PaketPage({
             Tim kami siap membantu kamu memilih paket yang paling sesuai.
           </p>
           <a
-            href={`https://wa.me/${process.env.NEXT_PUBLIC_WA_ADMIN || "6282331555431"}?text=${encodeURIComponent("Halo PAMA Studio! Saya ingin konsultasi paket.")}`}
+            href={buildWhatsAppLink("Halo PAMA Studio! Saya ingin konsultasi paket.")}
             target="_blank"
             rel="noreferrer"
             className="mt-8 inline-flex items-center gap-2.5 rounded-full bg-white px-8 py-4 text-sm font-semibold text-[#8B1A1A] transition hover:bg-[#FFD7A8]"

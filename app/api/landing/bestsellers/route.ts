@@ -4,56 +4,22 @@ import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 export async function GET() {
   const supabase = await createSupabaseServerClient();
 
-  const { data: orderCounts, error: countError } = await supabase
-    .from("orders")
-    .select("package_id")
-    .in("status", ["pending", "awaiting_payment", "paid", "scheduled", "in_progress", "done"]);
+  const { data, error } = await supabase
+    .from("packages")
+    .select("id, type, title, description, includes, duration_minutes, min_people, max_people, base_price_idr")
+    .eq("is_active", true);
 
-  if (countError) {
-    return NextResponse.json({ message: countError.message }, { status: 500 });
+  if (error) {
+    return NextResponse.json({ message: error.message }, { status: 500 });
   }
 
-  const packageOrderCount = new Map<string, number>();
-  for (const order of orderCounts ?? []) {
-    const current = packageOrderCount.get(order.package_id) ?? 0;
-    packageOrderCount.set(order.package_id, current + 1);
-  }
+  const allPackages = data ?? [];
+  const shuffled = [...allPackages].sort(() => Math.random() - 0.5);
+  const top3 = shuffled.slice(0, 3);
 
-  const sortedPackageIds = [...packageOrderCount.entries()]
-    .sort((a, b) => b[1] - a[1])
-    .map(([id]) => id);
+  const groupedPackages = groupPackagesByStudio(top3);
 
-  let packages: any[] = [];
-  if (sortedPackageIds.length > 0) {
-    const { data, error } = await supabase
-      .from("packages")
-      .select("id, type, title, description, includes, duration_minutes, min_people, max_people, base_price_idr")
-      .eq("is_active", true)
-      .in("id", sortedPackageIds);
-
-    if (!error && data) {
-      const orderMap = new Map(sortedPackageIds.map((id, idx) => [id, idx]));
-      packages = [...data].sort((a, b) => (orderMap.get(a.id) ?? 999) - (orderMap.get(b.id) ?? 999));
-    }
-  }
-
-  if (packages.length === 0) {
-    const { data, error } = await supabase
-      .from("packages")
-      .select("id, type, title, description, includes, duration_minutes, min_people, max_people, base_price_idr")
-      .eq("is_active", true)
-      .order("base_price_idr", { ascending: true })
-      .limit(3);
-
-    if (error) return NextResponse.json({ message: error.message }, { status: 500 });
-    packages = data ?? [];
-  }
-
-  const groupedPackages = groupPackagesByStudio(packages);
-
-  const top3 = groupedPackages.slice(0, 3);
-
-  return NextResponse.json({ packages: top3 });
+  return NextResponse.json({ packages: groupedPackages });
 }
 
 function groupPackagesByStudio(packages: any[]) {
@@ -108,13 +74,13 @@ function parseIncludes(includes: string | null): string[] {
 
 function getDefaultImage(key: string): string {
   const images: Record<string, string> = {
-    "Self Photo Studio 1": "/images/foto6.jpg",
-    "Self Photo Studio 2": "/images/foto7.jpg",
-    "Studio 2 (Molding)": "/images/molding.jpeg",
-    "Pas Foto": "/images/pasfoto1.jpg",
-    "Jasa Fotografer": "/images/foto11.jpg",
+    "Self Photo Studio 1": "/images/foto6.webp",
+    "Self Photo Studio 2": "/images/foto7.webp",
+    "Studio 2 (Molding)": "/images/molding.webp",
+    "Pas Foto": "/images/pasfoto1.webp",
+    "Jasa Fotografer": "/images/foto11.webp",
   };
-  return images[key] || "/images/foto1.jpg";
+  return images[key] || "/images/foto1.webp";
 }
 
 function formatIDR(n: number): string {

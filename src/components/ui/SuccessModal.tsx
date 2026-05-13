@@ -3,8 +3,7 @@
 import React from "react";
 import { CheckCircle2, MessageCircle, X, Calendar, Clock, Receipt, User } from "lucide-react";
 import { useRouter } from "next/navigation";
-
-const WA_ADMIN = process.env.NEXT_PUBLIC_WA_ADMIN || "6282331555431";
+import { buildWhatsAppLink } from "@/lib/whatsapp";
 
 export default function SuccessModal({ isOpen, data, onClose }: any) {
   const router = useRouter();
@@ -23,12 +22,13 @@ export default function SuccessModal({ isOpen, data, onClose }: any) {
 
 Mohon konfirmasinya ya!`;
 
-    window.open(`https://wa.me/${WA_ADMIN}?text=${encodeURIComponent(message)}`, "_blank");
+  window.open(buildWhatsAppLink(message), "_blank", "noopener,noreferrer");
   };
 
   const handleClose = () => {
     onClose();
     router.push("/dashboard-client");
+    router.refresh();
   };
 
   return (

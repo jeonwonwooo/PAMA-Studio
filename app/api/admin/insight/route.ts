@@ -1,6 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
 import Groq from "groq-sdk";
-import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 import { getAnalyticsData, AnalyticsRange } from "@/lib/analytics-queries";
 import { verifyAdmin } from "@/lib/auth-helpers";
 
@@ -72,7 +71,7 @@ export async function POST(req: NextRequest) {
     let insight;
     try {
       insight = JSON.parse(insightString);
-    } catch (e) {
+    } catch {
       console.error("Failed to parse AI insight:", insightString);
       insight = {
         executive_summary: "Gagal memproses analisis data.",

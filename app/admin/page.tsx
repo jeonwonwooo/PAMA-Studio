@@ -2,9 +2,9 @@
 
 import React, { useEffect, useState } from "react";
 import {
-  Users, ShoppingBag, Clock, CheckCircle, TrendingUp,
+  Users, ShoppingBag, Clock, CheckCircle,
   ArrowUpRight, Loader2, AlertCircle, ChevronLeft, ChevronRight,
-  Sparkles, ArrowRight,
+  ArrowRight,
 } from "lucide-react";
 import AIInsightWidget from "../../src/components/admin/AIInsightWidget";
 import { useRouter } from "next/navigation";

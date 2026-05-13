@@ -28,24 +28,24 @@ function getGroupKey(p: DbPackage): string {
 
 function defaultImagesByGroup(groupKey: string) {
   if (groupKey === "Studio 1") return {
-    image: "/images/foto6.jpg",
-    galleryImages: ["/images/foto1.jpg", "/images/foto2.jpg", "/images/foto3.jpg", "/images/foto4.jpg", "/images/foto5.jpg", "/images/foto6.jpg"],
+    image: "/images/foto6.webp",
+    galleryImages: ["/images/foto1.webp", "/images/foto2.webp", "/images/foto3.webp", "/images/foto4.webp", "/images/foto5.webp", "/images/foto6.webp"],
   };
   if (groupKey === "Studio 2 (Molding)") return {
-    image: "/images/molding.jpeg",
-    galleryImages: ["/images/foto7.jpg", "/images/foto8.jpg", "/images/foto9.jpg", "/images/foto10.jpg"],
+    image: "/images/molding.webp",
+    galleryImages: ["/images/foto7.webp", "/images/foto8.webp", "/images/foto9.webp", "/images/foto10.webp"],
   };
   if (groupKey === "Studio 2") return {
-    image: "/images/foto7.jpg",
-    galleryImages: ["/images/foto7.jpg", "/images/foto8.jpg", "/images/foto9.jpg", "/images/foto10.jpg"],
+    image: "/images/foto7.webp",
+    galleryImages: ["/images/foto7.webp", "/images/foto8.webp", "/images/foto9.webp", "/images/foto10.webp"],
   };
   if (groupKey === "Pas Foto") return {
-    image: "/images/pasfoto1.jpg",
-    galleryImages: ["/images/foto11.jpg", "/images/foto12.jpg", "/images/foto1.jpg", "/images/foto3.jpg"],
+    image: "/images/pasfoto1.webp",
+    galleryImages: ["/images/foto11.webp", "/images/foto12.webp", "/images/foto1.webp", "/images/foto3.webp"],
   };
   return {
-    image: "/images/foto11.jpg",
-    galleryImages: ["/images/foto11.jpg", "/images/foto12.jpg", "/images/foto1.jpg", "/images/foto3.jpg"],
+    image: "/images/foto11.webp",
+    galleryImages: ["/images/foto11.webp", "/images/foto12.webp", "/images/foto1.webp", "/images/foto3.webp"],
   };
 }
 
@@ -53,6 +53,13 @@ function getSubtitle(type: DbPackage["type"]) {
   if (type === "self_photo") return "Self Photo Studio";
   if (type === "pas_foto") return "Pas Foto";
   return "Jasa Fotografer";
+}
+
+function getDescription(pkg: DbPackage): string {
+  if (pkg.description) return pkg.description;
+  if (pkg.type === "self_photo") return "Studio foto self-service dengan pencahayaan profesional. Kamu bisa foto sendiri atau bersama teman tanpa tekanan. Pilih variant sesuai kebutuhanmu.";
+  if (pkg.type === "pas_foto") return "Layanan pas foto dengan edit rapi dan hasil natural. Cocok untuk dokumen resmi, CV, atau keperluan profesional lainnya.";
+  return "Layanan fotografi profesional dengan fotografer berpengalaman. Hasil foto estetik dengan arah pose yang tepat untuk berbagai kebutuhan.";
 }
 
 export function groupPackagesToCards(rows: DbPackage[]): PackageData[] {
@@ -95,9 +102,10 @@ export function groupPackagesToCards(rows: DbPackage[]): PackageData[] {
 
     result.push({
       id: groupKey.toLowerCase().replace(/\s+/g, "-").replace(/[()]/g, ""),
+      packageId: first.id,
       title: groupKey,
       subtitle: getSubtitle(first.type),
-      description: first.includes ?? first.description ?? "",
+      description: getDescription(first),
       image,
       galleryImages,
       subPackages,

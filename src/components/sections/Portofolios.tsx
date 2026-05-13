@@ -5,20 +5,20 @@ import Image from "next/image";
 
 const Portfolio: React.FC = () => {
   const row1 = [
-    "/images/foto4.jpg",
-    "/images/foto1.jpg",
-    "/images/foto2.jpg",
-    "/images/foto3.jpg",
-    "/images/foto5.jpg",
-    "/images/foto6.jpg",
+    "/images/foto4.webp",
+    "/images/foto1.webp",
+    "/images/foto2.webp",
+    "/images/foto3.webp",
+    "/images/foto5.webp",
+    "/images/foto6.webp",
   ];
   const row2 = [
-    "/images/foto7.jpg",
-    "/images/foto8.jpg",
-    "/images/foto9.jpg",
-    "/images/foto10.jpg",
-    "/images/foto11.jpg",
-    "/images/foto12.jpg",
+    "/images/foto7.webp",
+    "/images/foto8.webp",
+    "/images/foto9.webp",
+    "/images/foto10.webp",
+    "/images/foto11.webp",
+    "/images/foto12.webp",
   ];
 
   return (
