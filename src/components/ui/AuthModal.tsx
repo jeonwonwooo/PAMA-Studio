@@ -7,8 +7,7 @@ import { useRouter } from "next/navigation";
 import { useAuthRedirect, type AuthRedirectType } from "@/hooks/useAuthRedirect";
 import { createSupabaseBrowserClient } from "@/lib/supabase/supabase-browser";
 import {
-  createFallbackProfileFromValues,
-  fetchProfileByUserId,
+  fetchProfileWithFallbackValues,
   type AuthProfile,
 } from "@/lib/auth-profile";
 import { getAuthCallbackUrl } from "@/lib/site-url";
@@ -63,9 +62,12 @@ export default function AuthModal({
   const getCleanEmail = () => form.email.trim().toLowerCase();
 
   const resolveProfile = async (userId: string, fallbackEmail: string, fallbackName?: string) => {
-    const profile = await fetchProfileByUserId(supabase, userId);
-
-    return profile ?? createFallbackProfileFromValues(fallbackEmail, fallbackName);
+    return fetchProfileWithFallbackValues(
+      supabase,
+      userId,
+      fallbackEmail,
+      fallbackName
+    );
   };
 
   const handleSuccessRedirect = (profile: AuthProfile | null) => {
@@ -115,8 +117,7 @@ export default function AuthModal({
   const handleRegister = async () => {
     const email = getCleanEmail();
     const fullName = form.name.trim();
-    const emailRedirectTo =
-      typeof window === "undefined" ? undefined : getAuthCallbackUrl("/dashboard-client");
+    const emailRedirectTo = getAuthCallbackUrl("/dashboard-client");
 
     const { data, error } = await supabase.auth.signUp({
       email,

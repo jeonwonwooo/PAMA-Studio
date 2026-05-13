@@ -4,8 +4,7 @@ import { useState, useEffect, useCallback, useRef } from "react";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { createSupabaseBrowserClient } from "@/lib/supabase/supabase-browser";
 import {
-  createFallbackProfile,
-  fetchProfileByUserId,
+  fetchProfileWithFallback,
   type AuthProfile,
 } from "@/lib/auth-profile";
 
@@ -31,11 +30,6 @@ export function useAuth() {
   const supabase = createSupabaseBrowserClient();
   const initializedRef = useRef(false);
 
-  const fetchProfile = useCallback(
-    async (userId: string) => fetchProfileByUserId(supabase, userId),
-    [supabase]
-  );
-
   const setSessionState = useCallback(
     async (user: SupabaseUser | null) => {
       if (!user) {
@@ -43,10 +37,10 @@ export function useAuth() {
         return;
       }
 
-      const profile = (await fetchProfile(user.id)) ?? createFallbackProfile(user);
+      const profile = await fetchProfileWithFallback(supabase, user);
       setAuthState({ user, profile, loading: false, ready: true });
     },
-    [fetchProfile]
+    [supabase]
   );
 
   const loadUser = useCallback(async () => {

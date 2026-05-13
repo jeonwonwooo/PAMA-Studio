@@ -63,6 +63,25 @@ export async function fetchProfileByUserId(
   return normalizeProfile(data);
 }
 
+export async function fetchProfileWithFallback(
+  supabase: SupabaseClient,
+  user: User
+): Promise<AuthProfile> {
+  return (await fetchProfileByUserId(supabase, user.id)) ?? createFallbackProfile(user);
+}
+
+export async function fetchProfileWithFallbackValues(
+  supabase: SupabaseClient,
+  userId: string,
+  email?: string,
+  fullName?: string
+): Promise<AuthProfile> {
+  return (
+    (await fetchProfileByUserId(supabase, userId)) ??
+    createFallbackProfileFromValues(email, fullName)
+  );
+}
+
 function getFallbackName(fullName?: string | null, email?: string | null) {
   return fullName?.trim() || email?.split("@")[0] || DEFAULT_PROFILE_NAME;
 }

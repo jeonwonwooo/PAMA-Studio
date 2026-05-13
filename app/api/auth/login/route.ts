@@ -1,8 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 import {
-  createFallbackProfile,
-  fetchProfileByUserId,
+  fetchProfileWithFallback,
 } from "@/lib/auth-profile";
 import { rateLimit, getClientIp } from "@/lib/rateLimit";
 
@@ -61,9 +60,7 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    const profile =
-      (await fetchProfileByUserId(supabase, data.user.id)) ??
-      createFallbackProfile(data.user);
+    const profile = await fetchProfileWithFallback(supabase, data.user);
 
     return NextResponse.json({
       message: "Login berhasil",

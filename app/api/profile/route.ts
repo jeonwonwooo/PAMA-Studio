@@ -1,8 +1,7 @@
 import { NextResponse } from "next/server";
 import { createSupabaseServerClient } from "@/lib/supabase/supabase-server";
 import {
-  createFallbackProfile,
-  fetchProfileByUserId,
+  fetchProfileWithFallback,
 } from "@/lib/auth-profile";
 
 export async function GET() {
@@ -13,9 +12,7 @@ export async function GET() {
     return NextResponse.json({ message: "Unauthorized" }, { status: 401 });
   }
 
-  const profile =
-    (await fetchProfileByUserId(supabase, user.id)) ??
-    createFallbackProfile(user);
+  const profile = await fetchProfileWithFallback(supabase, user);
 
   return NextResponse.json({ user, profile });
 }
