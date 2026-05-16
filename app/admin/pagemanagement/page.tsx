@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import { Plus, Eye, Edit, X } from "lucide-react";
+import { useRouter } from "next/navigation";
 
 type Page = {
   id: string;
@@ -26,13 +27,13 @@ const PAGES: Page[] = [
   {
     id: "paket",
     title: "Paket",
-    description: "Halaman yang menampilkan semua paket foto yang tersedia di PAMA Studio.",
+    description: "Halaman yang menampilkan semua paket foto favorit para pelanggan PAMA Studio.",
     path: "/paket",
   },
   {
     id: "testimoni",
     title: "Testimoni",
-    description: "Halaman yang menampilkan ulasan dan testimoni dari pelanggan PAMA Studio.",
+    description: "Halaman yang menampilkan pengalaman dan ulasan pelanggan PAMA Studio.",
     path: "/#testimoni",
   },
   {
@@ -46,6 +47,18 @@ const PAGES: Page[] = [
     title: "FAQ",
     description: "Halaman berisi pertanyaan umum dan informasi penting seputar booking studio.",
     path: "/faq",
+  },
+  {
+    id: "checkout",
+    title: "Checkout",
+    description: "Halaman pemesanan untuk melakukan booking paket foto di PAMA Studio.",
+    path: "/checkout",
+  },
+  {
+    id: "dashboard-client",
+    title: "Dashboard Client",
+    description: "Halaman dashboard untuk pelanggan melihat riwayat dan status pesanan mereka.",
+    path: "/dashboard-client",
   },
 ];
 
@@ -168,6 +181,7 @@ function EditPageModal({ page, onClose }: { page: Page; onClose: () => void }) {
 export default function PageManagementPage() {
   const [showAddModal, setShowAddModal] = useState(false);
   const [editingPage, setEditingPage] = useState<Page | null>(null);
+  const router = useRouter();
 
   return (
     <div className="space-y-6">
@@ -180,12 +194,12 @@ export default function PageManagementPage() {
           <p className="text-[#8B1A1A] text-xs font-bold uppercase tracking-widest">Content Repository</p>
           <h1 className="text-2xl font-bold text-gray-800 mt-1">Page Management</h1>
         </div>
-        <button
-          onClick={() => setShowAddModal(true)}
-          className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#8B1A1A] text-white text-sm font-bold hover:bg-[#6B1212] transition shadow-sm"
-        >
-          <Plus size={16} /> Add New Page
-        </button>
+<button
+  onClick={() => router.push("/admin/pagemanagement/addnewpage")}
+  className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#8B1A1A] text-white text-sm font-bold hover:bg-[#6B1212] transition shadow-sm"
+>
+  <Plus size={16} /> Add New Page
+</button>
       </div>
 
       {/* Grid */}
@@ -206,11 +220,10 @@ export default function PageManagementPage() {
                   <Eye size={15} /> Preview
                 </a>
                 <button
-                  onClick={() => setEditingPage(page)}
-                  className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#8B1A1A] text-white text-sm font-semibold hover:bg-[#6B1212] transition"
-                >
-                  <Edit size={15} /> Edit Page
-                </button>
+                onClick={() => router.push(`/admin/pagemanagement/editpage?id=${page.id}&title=${encodeURIComponent(page.title)}&description=${encodeURIComponent(page.description)}`)}                className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-[#8B1A1A] text-white text-sm font-semibold hover:bg-[#6B1212] transition"
+              >
+                <Edit size={15} /> Edit Page
+              </button>
               </div>
             </div>
           </div>
