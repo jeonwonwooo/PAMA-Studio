@@ -15,6 +15,8 @@ import {
   X,
   Package,
   Home,
+  FileText,
+  Settings,
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Image from "next/image";
@@ -27,6 +29,8 @@ const menuItems = [
   { name: "Automation", icon: Clock, path: "/admin/automation" },
   { name: "Monitoring", icon: Monitor, path: "/admin/monitoring" },
   { name: "Packages", icon: Package, path: "/admin/packages" },
+  { name: "Page Management", icon: FileText, path: "/admin/pagemanagement" },
+  { name: "Settings", icon: Settings, path: "/admin/settings" },
 ];
 
 export default function AdminLayout({ children }: { children: React.ReactNode }) {
@@ -52,7 +56,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
   const userInitials = profile?.full_name
     ? profile.full_name
         .split(" ")
-        .map((w: string) => w[0])
+        .map((w: string) => w.charAt(0))
         .slice(0, 2)
         .join("")
         .toUpperCase()
@@ -92,7 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
           </div>
 
-          <nav className="flex-1 space-y-2 overflow-y-auto">
+          <nav className="flex-1 space-y-2">
             {menuItems.map((item) => {
               const isActive = pathname === item.path;
               return (
