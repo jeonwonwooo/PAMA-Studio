@@ -96,7 +96,7 @@ export default function AdminLayout({ children }: { children: React.ReactNode })
             </button>
           </div>
 
-          <nav className="flex-1 space-y-2 overflow-y-auto">
+          <nav className="flex-1 space-y-2">
             {menuItems.map((item) => {
               const isActive = pathname === item.path;
               return (
