@@ -63,6 +63,7 @@ const Navbar: React.FC = () => {
     { label: "Beranda", href: "/#beranda" },
     { label: "Portofolio", href: "/#portofolio" },
     { label: "Paket", href: "/#paket" },
+    { label: "Testimoni", href: "/#testimoni" },
     { label: "Kontak", href: "/#kontak" },
   ];
 

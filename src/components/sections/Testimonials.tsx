@@ -62,7 +62,7 @@ const Testimonials: React.FC = () => {
   }, []);
 
   return (
-    <section className="relative bg-[#FBF7F1] py-16 lg:py-24">
+    <section id="testimoni" className="relative bg-[#FBF7F1] py-16 lg:py-24">
       <div className="mx-auto max-w-7xl px-5 lg:px-8">
         <div className="grid grid-cols-1 gap-10 lg:grid-cols-12 lg:gap-12">
           <div className="lg:col-span-4">
