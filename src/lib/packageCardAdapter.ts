@@ -2,7 +2,7 @@ import type { PackageData } from "../components/paket/PackageCard";
 
 type DbPackage = {
   id: string;
-  type: "self_photo" | "pas_foto" | "photographer";
+  type: "self_photo" | "pas_foto" | "jasa_fotografer";
   title: string;
   description: string | null;
   includes: string | null;
@@ -17,12 +17,22 @@ function formatIDR(n: number) {
 }
 
 function getGroupKey(p: DbPackage): string {
-  const t = p.title.toLowerCase();
-  if (t.includes("studio 1")) return "Studio 1";
-  if (t.includes("studio 2") && t.includes("molding")) return "Studio 2 (Molding)";
-  if (t.includes("studio 2")) return "Studio 2";
+  const desc = (p.description ?? "").toLowerCase();
+
   if (p.type === "pas_foto") return "Pas Foto";
-  if (p.type === "photographer") return "Jasa Fotografer";
+
+  if (p.type === "jasa_fotografer") {
+    if (desc.includes("studio 2")) return "Jasa Fotografer";
+    return "Jasa Fotografer";
+  }
+
+  if (p.type === "self_photo") {
+    if (desc.includes("studio 1")) return "Studio 1";
+    if (desc.includes("studio 2") && desc.includes("molding")) return "Studio 2 (Molding)";
+    if (desc.includes("studio 2")) return "Studio 2";
+    return "Studio 1";
+  }
+
   return p.title;
 }
 

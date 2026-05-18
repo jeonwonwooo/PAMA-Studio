@@ -78,6 +78,10 @@ const BestSeller: React.FC = () => {
   ];
 
   const displayPackages = (packages.length > 0 ? packages : defaultPackages).slice(0, 3);
+  
+  function formatIDR(n: number) {
+  return "Rp " + new Intl.NumberFormat("id-ID").format(n);
+}
 
   return (
     <section
@@ -213,18 +217,18 @@ const BestSeller: React.FC = () => {
 
                   <div className="p-6">
                     <div className="flex items-baseline justify-between">
-                      <div
-                        className="min-h-[96px] text-3xl font-semibold text-[#1a0505] leading-tight"
-                        style={{ fontFamily: "Fraunces, serif" }}
-                      >
-                        {p.priceFormatted}
-                      </div>
-                      <div
-                        className="text-[11px] uppercase tracking-wider text-[#3a1a1a]/50"
-                        style={{ fontFamily: "Inter Tight, sans-serif" }}
-                      >
-                        / sesi
-                      </div>
+                      <div className="min-h-[96px]">
+  <div className="text-lg font-semibold text-[#8B1A1A]" style={{ fontFamily: "Fraunces, serif" }}>
+    {p.priceFormatted}
+  </div>
+  <div className="text-3xl font-semibold text-[#1a0505] leading-tight mt-1" style={{ fontFamily: "Fraunces, serif" }}>
+    {formatIDR(p.price)}
+  </div>
+  <div className="text-[11px] uppercase tracking-wider text-[#3a1a1a]/50 mt-1"
+    style={{ fontFamily: "Inter Tight, sans-serif" }}>
+    / sesi
+  </div>
+</div>
                     </div>
 
                     <ul
